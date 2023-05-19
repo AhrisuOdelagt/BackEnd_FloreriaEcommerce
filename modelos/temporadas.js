@@ -11,3 +11,7 @@ const temporadasSchema = mongoose.Schema({
         trim: true,
     }
 });
+
+// Creación del modelo
+const Temporada = mongoose.model("Temporada", temporadasSchema);
+export default Temporada;

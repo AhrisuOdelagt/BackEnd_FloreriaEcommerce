@@ -35,3 +35,7 @@ const productosSchema = mongoose.Schema({
         trim: true, 
     }
 });
+
+// Creación del modelo
+const Producto = mongoose.model("Producto", productosSchema);
+export default Producto;

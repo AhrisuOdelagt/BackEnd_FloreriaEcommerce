@@ -1,5 +1,6 @@
 import Cliente from "../modelos/cliente.js";
 import generarID from "../helpers/generarID.js";
+import generarJWT from "../helpers/generarJWT.js";
 
 // Registro del cliente en la base de datos
 const registroCliente = async (req, res) => {
@@ -41,7 +42,8 @@ const autenticacionCliente = async (req, res) => {
     if(await cliente.comprobarPassword(passwordCliente)){
         res.json({_id: cliente._id,
             nombre: cliente.nombreCliente,
-            email: cliente.emailCliente});
+            email: cliente.emailCliente,
+            token: generarJWT(cliente._id)});
     }
     else{
         const error = new Error("El password es incorrecto.");
@@ -49,4 +51,22 @@ const autenticacionCliente = async (req, res) => {
     }
 }
 
-export { registroCliente, autenticacionCliente };
+// Uso de Token para confirmar cliente
+const confirmarCliente = async (req, res) => {
+    const { tokenCliente } = req.params;
+    const clienteConfirmar = await Cliente.findOne({ tokenCliente });
+    if(!clienteConfirmar) {
+        const error = new Error("Token inválido.");
+        return res.status(403).json({msg: error.message});
+    }
+    try {
+        clienteConfirmar.isConfirmed = true;
+        clienteConfirmar.tokenCliente = undefined;
+        await clienteConfirmar.save();
+        res.json({msg: "Cuenta confirmada correctamente."})
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export { registroCliente, autenticacionCliente, confirmarCliente };

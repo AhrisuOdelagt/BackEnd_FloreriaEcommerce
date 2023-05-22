@@ -69,4 +69,71 @@ const confirmarCliente = async (req, res) => {
     }
 }
 
-export { registroCliente, autenticacionCliente, confirmarCliente };
+// Olvidé mi contraseña
+const olvidePassword = async (req, res) => {
+    const { emailCliente } = req.body;
+    // Comprobamos si el usuario existe
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("El usuario no existe.");
+        return res.status(404).json({msg: error.message});
+    }
+    try {
+        cliente.tokenCliente = generarID();
+        await cliente.save();
+        res.json({
+            msg: "Hemos enviado un email con las instrucciones."
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Uso de Token para confirmar cliente
+const comprobarToken = async (req, res) => {
+    const { tokenCliente } = req.params;
+    const tokenValido = await Cliente.findOne({ tokenCliente });
+    if(!tokenValido) {
+        const error = new Error("Token inválido.");
+        return res.status(403).json({msg: error.message});
+    }
+    try {
+        res.json({msg: "Token válido y el usuario existe."})
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Reestablecer contraseña
+const nuevoPasswordRec = async (req, res) => {
+    const { tokenCliente } = req.params;
+    const { nuevaPassword } = req.body;
+
+    const cliente = await Cliente.findOne({ tokenCliente });
+    if(!cliente) {
+        const error = new Error("Token inválido.");
+        return res.status(403).json({msg: error.message});
+    }
+    try {
+        cliente.passwordCliente = nuevaPassword;
+        cliente.tokenCliente = undefined;
+        cliente.save();
+        res.json({msg: "Password modificado correctamente."})
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Perfil
+ const perfil = async (req, res) => {
+    const { cliente } = req;
+    res.json(cliente);
+}
+
+export { registroCliente,
+    autenticacionCliente,
+    confirmarCliente,
+    olvidePassword,
+    comprobarToken,
+    nuevoPasswordRec,
+    perfil };

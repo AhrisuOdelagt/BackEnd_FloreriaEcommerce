@@ -1,6 +1,7 @@
 import Cliente from "../modelos/cliente.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
+import { emailRegistro } from "../helpers/emails.js";
 
 // Registro del cliente en la base de datos
 const registroCliente = async (req, res) => {
@@ -17,8 +18,18 @@ const registroCliente = async (req, res) => {
     try {
         const cliente = new Cliente(req.body);
         cliente.tokenCliente = generarID();
-        const clienteAlmacenado = await cliente.save();
-        res.json(clienteAlmacenado);
+        await cliente.save();
+
+        // Enviamos el email de confirmación
+        emailRegistro({
+            email: cliente.emailCliente,
+            nombre: cliente.nombreCliente,
+            token: cliente.tokenCliente
+        })
+
+        res.json({
+            msg: "Usuario Creado exitosamente. Revise su email para confirmar su cuenta."
+        });
     } catch (error) {
         console.log(error);
     }
@@ -125,9 +136,171 @@ const nuevoPasswordRec = async (req, res) => {
 }
 
 // Perfil
- const perfil = async (req, res) => {
+const perfil = async (req, res) => {
     const { cliente } = req;
     res.json(cliente);
+}
+
+// Modificar password
+const modificarPassword = async (req, res) => {
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const { newPassword } = req.body;
+    // Encontramos el documento del cliente que está realizando la operación
+    const clienteAModificar = await Cliente.findOne({ emailCliente });
+    if(!clienteAModificar.isConfirmed){
+        const error = new Error("Ocurrió un error.");
+        return res.status(403).json({msg: error.message});
+    }
+    // Realizamos la operación
+    try {
+        clienteAModificar.passwordCliente = newPassword;
+        clienteAModificar.save();
+        res.json({msg: "Contraseña modificada exitosamente."});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Modificar username
+const modificarUsername = async (req, res) => {
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const { nombre, apellido } = req.body;
+    // Encontramos el documento del cliente que está realizando la operación
+    const clienteAModificar = await Cliente.findOne({ emailCliente });
+    if(!clienteAModificar.isConfirmed){
+        const error = new Error("Ocurrió un error.");
+        return res.status(403).json({msg: error.message});
+    }
+    // Realizamos la operación
+    try {
+        let username;
+        username = `${nombre} ${apellido}`;
+        clienteAModificar.nombreCliente = username;
+        clienteAModificar.save();
+        res.json({msg: "Nombre de usuario modificado exitosamente."});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// // Modificar email
+// const modificarEmail = async (req, res) => {
+//     const { newEmail } = req.body;
+//     // Verificamos que el Email que quiere colocar el cliente no exista
+//     const cliente = await Cliente.findOne({ newEmail });
+//     if(cliente){
+//         const error = new Error("El email ya está ocupado.");
+//         return res.status(404).json({msg: error.message});
+//     }
+//     let emailCliente;
+//     emailCliente = req.cliente.emailCliente;
+//     // Encontramos el documento del cliente que está realizando la operación
+//     const clienteAModificar = await Cliente.findOne({ emailCliente });
+//     if(!clienteAModificar.isConfirmed){
+//         const error = new Error("Ocurrió un error.");
+//         return res.status(403).json({msg: error.message});
+//     }
+//     // Realizamos la operación
+//     try {
+//         clienteAModificar.emailCliente = newEmail;
+//         clienteAModificar.save();
+//         res.json({msg: "Email modificado exitosamente."});
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
+
+// Modificar teléfono
+const modificarTelefono = async (req, res) => {
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const { telefono } = req.body;
+    // Encontramos el documento del cliente que está realizando la operación
+    const clienteAModificar = await Cliente.findOne({ emailCliente });
+    if(!clienteAModificar.isConfirmed){
+        const error = new Error("Ocurrió un error.");
+        return res.status(403).json({msg: error.message});
+    }
+    // Realizamos la operación
+    try {
+        clienteAModificar.telefonoCliente = telefono;
+        clienteAModificar.save();
+        res.json({msg: "Teléfono modificado exitosamente."});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Modificar direccion
+const modificarDireccion = async (req, res) => {
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const { col,
+            cal,
+            cp,
+            nInt,
+            nExt,
+            calle1,
+            calle2,
+            adicionales } = req.body;
+    // Encontramos el documento del cliente que está realizando la operación
+    const clienteAModificar = await Cliente.findOne({ emailCliente });
+    if(!clienteAModificar.isConfirmed){
+        const error = new Error("Ocurrió un error.");
+        return res.status(403).json({msg: error.message});
+    }
+    // Realizamos la operación
+    try {
+        const direccion = {
+            codigoPostal: cp,
+            colonia: col,
+            calle: cal,
+            numInt: nInt,
+            numExt: nExt,
+            referencia1: calle1,
+            referencia2: calle2,
+            indicacionesAd: adicionales
+        };
+        clienteAModificar.direccionCliente.push(direccion);
+        clienteAModificar.save();
+        res.json({msg: "Dirección modificada exitosamente."});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Modificar Tarjeta
+const modificarTarjeta = async (req, res) => {
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const { tipo,
+            num,
+            fecha,
+            c,
+            titular } = req.body;
+    // Encontramos el documento del cliente que está realizando la operación
+    const clienteAModificar = await Cliente.findOne({ emailCliente });
+    if(!clienteAModificar.isConfirmed){
+        const error = new Error("Ocurrió un error.");
+        return res.status(403).json({msg: error.message});
+    }
+    // Realizamos la operación
+    try {
+        const direccion = {
+            tipoTarjeta: tipo,
+            numeroTarjeta: num,
+            fechaVencimiento: fecha,
+            cvv: c,
+            titularTarjeta: titular
+        };
+        clienteAModificar.direccionCliente.push(direccion);
+        clienteAModificar.save();
+        res.json({msg: "Tarjeta modificada exitosamente."});
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 export { registroCliente,
@@ -136,4 +309,10 @@ export { registroCliente,
     olvidePassword,
     comprobarToken,
     nuevoPasswordRec,
-    perfil };
+    perfil,
+    modificarPassword,
+    modificarUsername,
+    /*modificarEmail,*/
+    modificarTelefono,
+    modificarDireccion,
+    modificarTarjeta };

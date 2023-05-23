@@ -4,10 +4,10 @@ import bcrypt from "bcrypt";
 // Creación del esquema del documento embebido Direccion
 const direccionSchema = mongoose.Schema({
     _id : false,
-    delegacion: {
+    /* delegacion: {
         type: String,
         trim: true,
-    },
+    }, */
     codigoPostal: {
         type: String,
         trim: true,
@@ -25,6 +25,18 @@ const direccionSchema = mongoose.Schema({
         trim: true,
     },
     numExt: {
+        type: String,
+        trim: true,
+    },
+    referencia1: {
+        type: String,
+        trim: true,
+    },
+    referencia2: {
+        type: String,
+        trim: true,
+    },
+    indicacionesAd: {
         type: String,
         trim: true,
     }
@@ -77,7 +89,6 @@ const clienteSchema = mongoose.Schema({
         type: String,
         // required: true,
         trim: true,
-        default: "00-0000-0000"
     },
     isConfirmed: {
         type: Boolean,
@@ -89,24 +100,9 @@ const clienteSchema = mongoose.Schema({
     },
     direccionCliente: {
         type: [direccionSchema],
-        default: {
-            delegacion: "default value",
-            codigoPostal: "default value",
-            colonia: "default value",
-            calle: "default value",
-            numInt: "default value",
-            numExt: "default value",
-        },
     },
     tarjetaCliente: {
         type: [tarjetaSchema],
-        default: {
-            tipoTarjeta: "default value",
-            numTarjeta: "default value",
-            fechaVencimiento: "default value",
-            cvv: "default value",
-            titularTarjeta: "default value",
-        },
     },
     pedidosCliente: {
         type: [String],

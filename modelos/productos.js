@@ -23,7 +23,7 @@ const productosSchema = mongoose.Schema({
         trim: true,
     },
     imagenProducto: {
-        type: String,   /* No se sabe aún cómo se van a manejar las imágenes */
+        type: [String],   /* No se sabe aún cómo se van a manejar las imágenes */
         trim: true,
     },
     categoriaProducto: {

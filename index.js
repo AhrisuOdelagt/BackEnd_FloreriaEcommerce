@@ -10,6 +10,7 @@ connectDB();
 
 // Enrutamiento
 app.use("/api/cliente", clienteRoutes);
+// app.use("/api/temporada", temporadaRoutes);
 
 
 // Ocultamiento del puerto de conexión

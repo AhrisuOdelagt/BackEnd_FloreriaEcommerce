@@ -4,12 +4,12 @@ export const emailRegistro = async (datos) => {
     const {email, nombre, token} = datos;
 
     const transport = nodemailer.createTransport({
-        host: "smtp.gmail.com",
+        host: process.env.MASTER_H,
         port: 465,
         secure: true,
         auth: {
-          user: "demian.oder@gmail.com",
-          pass: "wmhhtnmrcfstlwhr"
+          user: process.env.MASTER_EM,
+          pass: process.env.MASTER_P
         }
       });
 

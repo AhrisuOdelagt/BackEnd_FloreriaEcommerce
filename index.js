@@ -1,7 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import clienteRoutes from "./routes/clienteRoutes.js"
+import clienteRoutes from "./routes/clienteRoutes.js";
+import frutaRoutes from "./routes/frutaRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,7 @@ connectDB();
 // Enrutamiento
 app.use("/api/cliente", clienteRoutes);
 // app.use("/api/temporada", temporadaRoutes);
+app.use("/api/fruta", frutaRoutes);
 
 
 // Ocultamiento del puerto de conexión

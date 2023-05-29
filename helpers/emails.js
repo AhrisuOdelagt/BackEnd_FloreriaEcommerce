@@ -39,8 +39,7 @@ export const emailRegistro = async (datos) => {
         html: `
         <p>Hola, ${nombre}, comprueba tu cuenta en Florería Ecommerce.</p>
         <p>Tu cuenta está casi lista, tu token de acceso es: ${token}</p>
-        <p>Para finalizar este proceso, sólo debes colocar el token proporcionado en el siguiente enlace: 
-        <! -- <a href="${process.env.PROJECT_URL}/api/cliente/confirmar/${token}">Comfirmar cuenta</a> --></p>
+        <p>Para finalizar este proceso, sólo debes colocar el token en la ventana emergente.</p>
         <p>Si tú no creaste esta cuenta, puedes ignorar este correo electrónico.</p>
         `
     })
@@ -85,8 +84,7 @@ export const emailRestablecer = async (datos) => {
       html: `
       <p>Hola, ${nombre}, restablece tu constraseña en Florería Ecommerce.</p>
       <p>Para restablecer tu contraseña, necesitarás el siguiente token: ${token}</p>
-      <p>Para continuar con este proceso, sólo debes colocar el token proporcionado en el siguiente enlace: 
-      <! -- <a href="${process.env.PROJECT_URL}/api/cliente/confirmar/${token}">Comfirmar cuenta</a> --></p>
+      <p>Para continuar con este proceso, sólo debes colocar el token en la ventana emergente.</p>
       <p>Si tú no estabas a la espera de este servicio, puedes ignorar este correo electrónico.</p>
       `
   })

@@ -11,7 +11,7 @@ const registroCliente = async (req, res) => {
 
     // Validamos que el cliente no exista ya
     if(existeCliente){
-        const error = new Error("El usuario ya está registrado.");
+        const error = new Error("Correo asociado a una cuenta");
         return res.status(400).json({ msg: error.message });
     }
 
@@ -28,7 +28,7 @@ const registroCliente = async (req, res) => {
         })
 
         res.json({
-            msg: "Usuario Creado exitosamente. Revise su email para confirmar su cuenta."
+            msg: "Cuenta creada con éxito"
         });
     } catch (error) {
         console.log(error);
@@ -37,16 +37,16 @@ const registroCliente = async (req, res) => {
 
 // Autenticación del Usuario
 const autenticacionCliente = async (req, res) => {
-    const { email, passwordCliente } = req.body;
+    const { emailCliente, passwordCliente } = req.body;
     // Comprobamos si el usuario existe
-    const cliente = await Cliente.findOne({ email });
+    const cliente = await Cliente.findOne({ emailCliente });
     if(!cliente){
-        const error = new Error("El usuario no existe.");
+        const error = new Error("Correo o contraseña incorrectos");
         return res.status(404).json({msg: error.message});
     }
     // Comprobamos is el usuario está confirmado
     if(!cliente.isConfirmed){
-        const error = new Error("El usuario no está confirmado.");
+        const error = new Error("Usuario sin confirmar");  /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
     // Confirmamos la password
@@ -57,7 +57,7 @@ const autenticacionCliente = async (req, res) => {
             token: generarJWT(cliente._id)});
     }
     else{
-        const error = new Error("El password es incorrecto.");
+        const error = new Error("Correo o contraseña incorrectos");
         return res.status(403).json({msg: error.message});
     }
 }
@@ -67,14 +67,14 @@ const confirmarCliente = async (req, res) => {
     const { tokenCliente } = req.params;
     const clienteConfirmar = await Cliente.findOne({ tokenCliente });
     if(!clienteConfirmar) {
-        const error = new Error("Token inválido.");
+        const error = new Error("Código de verificación inválido");
         return res.status(403).json({msg: error.message});
     }
     try {
         clienteConfirmar.isConfirmed = true;
         clienteConfirmar.tokenCliente = undefined;
         await clienteConfirmar.save();
-        res.json({msg: "Cuenta confirmada correctamente."})
+        res.json({msg: "Cuenta confirmada con éxito"})  /* Mensaje faltante */
     } catch (error) {
         console.log(error);
     }
@@ -86,7 +86,7 @@ const olvidePassword = async (req, res) => {
     // Comprobamos si el usuario existe
     const cliente = await Cliente.findOne({ emailCliente });
     if(!cliente){
-        const error = new Error("El usuario no existe.");
+        const error = new Error("El correo no está registrado");   /* Mensaje faltante */
         return res.status(404).json({msg: error.message});
     }
     try {
@@ -99,7 +99,7 @@ const olvidePassword = async (req, res) => {
             token: cliente.tokenCliente
         })
         res.json({
-            msg: "Hemos enviado un email con las instrucciones."
+            msg: "Se ha enviado un correo con las instrucciones a seguir"   /* Mensaje faltante */
         });
     } catch (error) {
         console.log(error);
@@ -111,11 +111,11 @@ const comprobarToken = async (req, res) => {
     const { tokenCliente } = req.params;
     const tokenValido = await Cliente.findOne({ tokenCliente });
     if(!tokenValido) {
-        const error = new Error("Token inválido.");
+        const error = new Error("Código de verificación inválido");
         return res.status(403).json({msg: error.message});
     }
     try {
-        res.json({msg: "Token válido y el usuario existe."})
+        res.json({msg: "Código de verificación correcto"})     /* Mensaje faltante */
     } catch (error) {
         console.log(error);
     }
@@ -128,14 +128,14 @@ const nuevoPasswordRec = async (req, res) => {
 
     const cliente = await Cliente.findOne({ tokenCliente });
     if(!cliente) {
-        const error = new Error("Token inválido.");
+        const error = new Error("Código de verificación inválido");
         return res.status(403).json({msg: error.message});
     }
     try {
         cliente.passwordCliente = nuevaPassword;
         cliente.tokenCliente = undefined;
         cliente.save();
-        res.json({msg: "Password modificado correctamente."})
+        res.json({msg: "Cambio guardado exitosamente"})
     } catch (error) {
         console.log(error);
     }

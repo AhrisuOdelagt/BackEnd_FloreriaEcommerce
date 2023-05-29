@@ -1,7 +1,7 @@
 import Cliente from "../modelos/cliente.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
-import { emailRegistro } from "../helpers/emails.js";
+import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
 
 // Registro del cliente en la base de datos
 const registroCliente = async (req, res) => {
@@ -92,6 +92,12 @@ const olvidePassword = async (req, res) => {
     try {
         cliente.tokenCliente = generarID();
         await cliente.save();
+        // Enviamos el email para restablecer la contraseña
+        emailRestablecer({
+            email: cliente.emailCliente,
+            nombre: cliente.nombreCliente,
+            token: cliente.tokenCliente
+        })
         res.json({
             msg: "Hemos enviado un email con las instrucciones."
         });

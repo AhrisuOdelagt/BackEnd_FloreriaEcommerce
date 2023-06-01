@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import cldConfig from "./config/cloudinary.js";
 import clienteRoutes from "./routes/clienteRoutes.js"
 import temporadaRoutes from "./routes/temporadaRoutes.js"
 
@@ -10,6 +11,8 @@ app.use(express.json());
 app.use(cors())
 dotenv.config();
 connectDB();
+cldConfig();
+
 
 // Enrutamiento
 app.use("/api/cliente", clienteRoutes);

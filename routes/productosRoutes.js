@@ -3,7 +3,8 @@ import { registroProducto,
         modificarProducto,
         eliminarProducto,
         verProducto,
-        mostrarProductos } from "../controllers/productosController.js";
+        mostrarFlores,
+        mostrarPeluches } from "../controllers/productosController.js";
 import checkAuthAdmin from "../middleware/checkAuthAdmin.js"
 
 const router = express.Router();
@@ -19,7 +20,9 @@ router.post("/eliminarProducto", checkAuthAdmin, eliminarProducto);
 router.post("/verProducto", checkAuthAdmin, verProducto);
 
 /* Catálogo */
-// Mostar productos
-router.get("/mostrarProductos", mostrarProductos);
+// Mostrar flores
+router.get("/mostrarFlores", mostrarFlores);
+// Mostrar peluches
+router.get("/mostrarPeluches", mostrarPeluches);
 
 export default router;

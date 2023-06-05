@@ -52,7 +52,17 @@ const registroProducto = async(req, res) => {
                                         cantidadInv,
                                         descuentoProducto});
         producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
-        
+        // Determinamos el Status del producto
+        if(producto.cantidadInv > 30){
+            producto.statusProducto = "Disponible";
+        }
+        else if(producto.cantidadInv > 0){
+            producto.statusProducto = "Pocos";
+        }
+        else{
+            producto.statusProducto = "Agotado";
+        }
+
         // Insertamos imagenes
         async function uploadImg(path){
             try {
@@ -156,6 +166,18 @@ const modificarProducto = async (req, res) => {
 
         // Modificaciones complejas
         productoAModificar.tipoProducto = tipoProducto;
+
+        // Determinamos el Status del producto
+        if(productoAModificar.cantidadInv > 30){
+            productoAModificar.statusProducto = "Disponible";
+        }
+        else if(productoAModificar.cantidadInv > 0){
+            productoAModificar.statusProducto = "Pocos";
+        }
+        else{
+            productoAModificar.statusProducto = "Agotado";
+        }
+        
         await productoAModificar.save();
 
         // Imágenes
@@ -305,10 +327,27 @@ const eliminarProducto = async(req, res) => {
     }
 }
 
-const mostrarProductos = async (req, res) => {
+const mostrarFlores = async (req, res) => {
     try {
-        const documentos = await Producto.find();
-        res.json({ doc: documentos });
+
+        // Especificamos que sólo se buscan flores
+        const flores = { tipoProducto: "Flor" };
+
+        const documentos = await Producto.find(flores);
+        res.json({ fleurs: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const mostrarPeluches = async (req, res) => {
+    try {
+
+        // Especificamos que sólo se buscan flores
+        const peluches = { tipoProducto: "Peluche" };
+
+        const documentos = await Producto.find(peluches);
+        res.json({ plushies: documentos });
     } catch (error) {
         console.log(error);
     }
@@ -318,5 +357,6 @@ export{registroProducto,
     verProducto,
     modificarProducto,
     eliminarProducto,
-    mostrarProductos
+    mostrarFlores,
+    mostrarPeluches
 };

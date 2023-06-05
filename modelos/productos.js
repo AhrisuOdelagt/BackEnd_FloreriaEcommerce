@@ -27,6 +27,11 @@ const productosSchema = mongoose.Schema({
         trim: true,
         required: true,
     },
+    statusProducto: {
+        type: String,
+        trim: true,
+        required: true,
+    },
     descuentoProducto: {
         type: Number,
         trim: true,

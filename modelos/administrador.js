@@ -32,9 +32,6 @@ const administradorSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    direccionAdministrador: {
-        type: [direccionSchema],
-    },
     tokenAdministrador: {
         type: String,
     }

@@ -26,7 +26,7 @@ export const emailRegistro = async (datos) => {
     console.log(email);
     // Información del email
     const info = await transport.sendMail({
-        from: '"Florería Ecommerce — Administrador de la Base de Datos" <demian.oder@gmail.com>',
+        from: '"Florería Ecommerce — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
         to: email,
         subject: "Florería Ecommerce — Confirma tu cuenta",
         text: "Comprueba tu cuenta en Florería Ecommerce",
@@ -37,7 +37,7 @@ export const emailRegistro = async (datos) => {
         <p>Si tu no creaste esta cuenta, puedes ignorar este email.</p>
         `*/
         html: `
-        <p>Hola, ${nombre}, comprueba tu cuenta en Florería Ecommerce.</p>
+        <p>Hola, ${nombre}, comprueba tu cuenta en Florería Jardín del Edén.</p>
         <p>Tu cuenta está casi lista, tu token de acceso es: ${token}</p>
         <p>Para finalizar este proceso, sólo debes colocar el token en la ventana emergente.</p>
         <p>Si tú no creaste esta cuenta, puedes ignorar este correo electrónico.</p>
@@ -71,7 +71,7 @@ export const emailRestablecer = async (datos) => {
   console.log(email);
   // Información del email
   const info = await transport.sendMail({
-      from: '"Florería Ecommerce — Administrador de la Base de Datos" <demian.oder@gmail.com>',
+      from: '"Florería Ecommerce — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
       to: email,
       subject: "Florería Ecommerce — Restablecer contraseña",
       text: "Restablece tu contraseña en Florería Ecommerce",
@@ -82,7 +82,7 @@ export const emailRestablecer = async (datos) => {
       <p>Si tu no creaste esta cuenta, puedes ignorar este email.</p>
       `*/
       html: `
-      <p>Hola, ${nombre}, restablece tu constraseña en Florería Ecommerce.</p>
+      <p>Hola, ${nombre}, restablece tu constraseña en Florería Jardín del Edén.</p>
       <p>Para restablecer tu contraseña, necesitarás el siguiente token: ${token}</p>
       <p>Para continuar con este proceso, sólo debes colocar el token en la ventana emergente.</p>
       <p>Si tú no estabas a la espera de este servicio, puedes ignorar este correo electrónico.</p>

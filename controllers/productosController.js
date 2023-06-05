@@ -1,26 +1,91 @@
 import Producto from "../modelos/productos.js";
-import generarID from "../helpers/generarID.js";
-import generarJWT from "../helpers/generarJWT.js";
+import Administrador from "../modelos/administrador.js"
+// import Temporada from "../modelos/temporadas.js";
+import { v2 as cloudinary } from 'cloudinary';
 
 //Registro de productos en la base de datos
 const registroProducto = async(req, res) => {
-    //Evitar productos duplicados
-    const { nombreProducto } = req.body;
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Evitar productos duplicados
+    const { nombreProducto,
+            descrProducto,
+            tipoProducto,
+            precioProducto,
+            categoriaProducto,
+            cantidadInv,
+            descuentoProducto,
+            imagenes } = req.body;
     const existeProducto = await Producto.findOne({ nombreProducto });
 
-    //Validamos que el producto no exista
+    // Validamos que el producto no exista
     if(existeProducto){
-        const error = new Error("El producto ya existe");
+        const error = new Error("Producto ya registrado");  /* Mensaje faltante */
         return res.status(400).json({ msg: error.message});
     }
 
+    // Validamos que el tipo de producto sea valido
+    if (tipoProducto !== "Flor" && tipoProducto !== "Peluche") {
+        const error = new Error("Tipo de producto inválido");   /* Mensaje faltante */
+        return res.status(403).json({ msg: error.message });
+    }
+
+    // Validamos que la cantidad de imágenes sea correcta
+    if(imagenes.length < 3){
+        const error = new Error("Cantidad de imágenes insuficiente");   /* Mensaje faltante */
+        return res.status(403).json({ msg: error.message});
+    }
+
     try{
-        const producto = new Producto(req.body);
-        await producto.save();
+        const producto = new Producto({nombreProducto,
+                                        descrProducto,
+                                        tipoProducto,
+                                        precioProducto,
+                                        categoriaProducto,
+                                        cantidadInv,
+                                        descuentoProducto});
+        producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
+        
+        // Insertamos imagenes
+        async function uploadImg(path){
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    cloudinary.uploader.upload(path, async (error, result) => {
+                        if(error){
+                            reject(error);
+                        }
+                        else{
+                            resolve(result);
+                            producto.imagenProducto.push(result.public_id);
+                            // Guardamos cambios
+                            await producto.save();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        // Esperamos tiempo antes de subir todas las imágenes, una por una
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+          }
+        for (let index = 0; index < imagenes.length; index++) {
+            await delay(200);
+            uploadImg(imagenes[index]);
+            await delay(200);
+        }
 
         //Regresamos confirmacion
         res.json({
-            msg: "Producto agregado a la base de datos."
+            msg: "Producto registrado exitosamente" /* Mensaje faltante */
         })
     }
     catch(error){
@@ -29,63 +94,210 @@ const registroProducto = async(req, res) => {
 };
 
 const modificarProducto = async (req, res) => {
-    const{nombreProducto,
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+    
+    let {nombreProducto,
+        nuevoNombre,
         descrProducto,
+        tipoProducto,
         precioProducto,
         cantidadInv,
         descuentoProducto,
-        imagenProducto,
-        categoriaProducto,
-        temporadaProducto} = req.body;
+        imagenesAdd,
+        imagenesRem,
+        categoriaProducto,} = req.body;
     
-    console.log(nombreProducto);
-    console.log(descrProducto);
-    console.log(precioProducto);
-    console.log(cantidadInv);
-    
-    const productoAModificar = await Producto.findOne({nombreProducto});
+    const productoAModificar = await Producto.findOne({ nombreProducto });
 
-    console.log(productoAModificar);
-    //Se confirma que exista el producto
+    // Se confirma que exista el producto
     if(!productoAModificar){
-        const error = new Error("Producto no encontrado.");
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
-    //Se actualiza la informacion
+
+    // Verificamos que no haya conflictos de nombre
+    nombreProducto = nuevoNombre;
+    const existeProducto = await Producto.findOne({ nombreProducto });
+    if(existeProducto){
+        const error = new Error("Este producto ya existe"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Validamos que el tipo de producto sea valido
+    if (tipoProducto !== "Flor" && tipoProducto !== "Peluche") {
+        const error = new Error("Tipo de producto inválido");   /* Mensaje faltante */
+        return res.status(403).json({ msg: error.message });
+    }
+
+    // Se verifica que se sigan existiendo como mínimo tres imágenes tras los cambios
+    if(productoAModificar.imagenProducto.length + imagenesAdd.length - imagenesRem.length < 3){
+
+        const error = new Error("Cantidad de imágenes insuficiente");   /* Mensaje faltante */
+        return res.status(403).json({ msg: error.message});
+    }
+
+    // Se actualiza la informacion
     try{
+        // Modificaciones simples
+        productoAModificar.nombreProducto = nombreProducto;
         productoAModificar.descrProducto = descrProducto;
         productoAModificar.precioProducto = precioProducto;
         productoAModificar.cantidadInv = cantidadInv;
-        productoAModificar.descuentoProducto = descuentoProducto;
-        productoAModificar.imagenProducto = imagenProducto;
         productoAModificar.categoriaProducto = categoriaProducto;
-        productoAModificar.temporadaProducto = temporadaProducto;
+        productoAModificar.precioDescuento = precioProducto - (productoAModificar.descuentoProducto * precioProducto)/100;
 
-        productoAModificar.save();
 
-        res.json({msg: "Producto actualizado exitosamente."})
+        // Modificaciones complejas
+        productoAModificar.tipoProducto = tipoProducto;
+        await productoAModificar.save();
+
+        // Imágenes
+        // ¿Se están añadiendo las imágenes?
+        if(imagenesAdd.length != 0){
+            async function uploadImg(path){
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        cloudinary.uploader.upload(path, async (error, result) => {
+                            if(error){
+                                reject(error);
+                            }
+                            else{
+                                resolve(result);
+                                productoAModificar.imagenProducto.push(result.public_id);
+                                // Guardamos cambios
+                                await productoAModificar.save();
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+              }
+            for (let index = 0; index < imagenesAdd.length; index++) {
+                uploadImg(imagenesAdd[index]);
+                await delay(200);
+            }
+        }
+        // ¿Se están eliminando las imágenes?
+        if(imagenesRem.length != 0){
+            // Aislamos las imágenes que se quieren eliminar
+            let ogImg = productoAModificar.imagenProducto;
+            console.log(ogImg);
+            let delImg = [];
+            for (let index = 0; index < imagenesRem.length; index++) {
+                delImg.push(ogImg[imagenesRem[index]]);
+            }
+
+            // Guardamos sólo las imágenes que se quieren conservar
+            let newImg = [];
+            for (let i = 0; i < ogImg.length; i++) {
+                let flag = 0;
+                for (let j= 0; j < delImg.length; j++) {
+                    if(ogImg[i] === delImg[j]){
+                        flag = 1;
+                        break;
+                    } 
+                }
+                if(flag !== 1){
+                    newImg.push(ogImg[i]);
+                }
+            }
+
+            // Eliminamos las imágenes de la API Cloudinary, una por una
+            async function removeImage(publicId) {
+                try {
+                  const result = await cloudinary.uploader.destroy(publicId);
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            for (let index = 0; index < delImg.length; index++) {
+                removeImage(delImg[index]);
+            }
+
+            console.log(delImg);
+            console.log(newImg);
+
+            // Subimos las imágenes restantes a la base de datos
+            productoAModificar.imagenProducto = undefined;
+            productoAModificar.imagenProducto = [...newImg];
+            await productoAModificar.save();
+        }
+
+        // Guardamos los cambios
+        await productoAModificar.save();
+        res.json({msg: "Cambio guardado exitosamente"});
     }
+
     catch(error){
         console.log(error);
     }
 }
 
 const verProducto = async(req, res) => {
-    const { producto } = req;
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+    // Se confirma que exista el producto
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
     res.json(producto);
 }
 
 const eliminarProducto = async(req, res) => {
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+    
     const {nombreProducto} = req.body;
 
-    const producto = await Producto.findOne(nombreProducto);
+    const producto = await Producto.findOne({ nombreProducto });
 
     if(!producto){
-        const error = new Error("Ocurrio un error");
+        const error = new Error("Producto no registrado");
         return res.status(403).json({msg: error.message});
     }
 
     try {
+        async function removeImage(publicId) {
+            try {
+              const result = await cloudinary.uploader.destroy(publicId);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        // Eliminamos las imágenes del producto de Cloudinary, una por una
+        let arrImg = producto.imagenProducto;
+        for (let index = 0; index < arrImg.length; index++) {
+            removeImage(arrImg[index]);
+        }
+
         await producto.deleteOne();
         res.json({msg: "Producto eliminado"});
     } catch (error) {
@@ -93,8 +305,18 @@ const eliminarProducto = async(req, res) => {
     }
 }
 
+const mostrarProductos = async (req, res) => {
+    try {
+        const documentos = await Producto.find();
+        res.json({ doc: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 export{registroProducto,
     verProducto,
     modificarProducto,
-    eliminarProducto
+    eliminarProducto,
+    mostrarProductos
 };

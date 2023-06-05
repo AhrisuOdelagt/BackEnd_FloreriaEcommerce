@@ -162,7 +162,7 @@ const modificarPassword = async (req, res) => {
     try {
         clienteAModificar.passwordCliente = newPassword;
         clienteAModificar.save();
-        res.json({msg: "Contraseña modificada exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -185,7 +185,7 @@ const modificarUsername = async (req, res) => {
         username = `${nombre} ${apellido}`;
         clienteAModificar.nombreCliente = username;
         clienteAModificar.save();
-        res.json({msg: "Nombre de usuario modificado exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -233,7 +233,7 @@ const modificarTelefono = async (req, res) => {
     try {
         clienteAModificar.telefonoCliente = telefono;
         clienteAModificar.save();
-        res.json({msg: "Teléfono modificado exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -271,7 +271,7 @@ const modificarDireccion = async (req, res) => {
         };
         clienteAModificar.direccionCliente.push(direccion);
         clienteAModificar.save();
-        res.json({msg: "Dirección modificada exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -303,7 +303,7 @@ const modificarTarjeta = async (req, res) => {
         };
         clienteAModificar.direccionCliente.push(direccion);
         clienteAModificar.save();
-        res.json({msg: "Tarjeta modificada exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }

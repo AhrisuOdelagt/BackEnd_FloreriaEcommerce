@@ -100,7 +100,7 @@ const olvidePassword = async (req, res) => {
             token: administrador.tokenAdministrador
         })
         res.json({
-            msg: "Se ha enviado un correo con las instrucciones a seguir"
+            msg: "Se ha enviado un correo con las instrucciones a seguir"   /* Mensaje faltante */
         });
     } catch (error) {
         console.log(error);

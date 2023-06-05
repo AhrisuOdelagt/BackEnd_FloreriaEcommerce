@@ -5,10 +5,25 @@ const temporadasSchema = mongoose.Schema({
     nombreTemporada: {
         type: String,
         trim: true,
+        required: true,
     },
     descrTemporada: {
         type: String,
         trim: true,
+        required: true,
+    },
+    descuentoTemporada: {
+        type: String,
+        trim: true,
+        required: true,
+    },
+    fechaInicio: {
+        type: String,
+        trim: true
+    },
+    fechaFin: {
+        type: String,
+        trim: true
     }
 });
 

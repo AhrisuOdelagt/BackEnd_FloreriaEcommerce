@@ -45,10 +45,6 @@ const direccionSchema = mongoose.Schema({
 // Creación del esquema del documento embebido Tarjeta
 const tarjetaSchema = mongoose.Schema({
     _id : false,
-    tipoTarjeta: {
-        type: String,
-        trim: true,
-    },
     numTarjeta: {
         type: String,
         trim: true,
@@ -91,10 +87,6 @@ const clienteSchema = mongoose.Schema({
         trim: true,
     },
     isConfirmed: {
-        type: Boolean,
-        default: false,
-    },
-    isAdmin: {
         type: Boolean,
         default: false,
     },

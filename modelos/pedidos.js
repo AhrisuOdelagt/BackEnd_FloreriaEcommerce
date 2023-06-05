@@ -1,10 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
 // Creación del esquema del documento embebido Detalles
-const detallesSchema = mongoose.Schema({
+const carritoSchema = mongoose.Schema({
     _id : false,
-    producto: { /* Estos productos tendrán un tipo ObjectId para llamar por referencia */
-        type: String,
+    producto: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref : "Producto",
         trim: true,
     },
     cantidad: {
@@ -22,6 +23,7 @@ const pedidosSchema = mongoose.Schema({
     fechaPedido: {
         type: Date,
         trim: true,
+        default: Date.now(),
     },
     totalArticulos: {
         type: Number,
@@ -63,7 +65,7 @@ const pedidosSchema = mongoose.Schema({
         default: false,
     },
     detallesPedido: {
-        type: [detallesSchema],
+        type: [carritoSchema],
     }
 });
 

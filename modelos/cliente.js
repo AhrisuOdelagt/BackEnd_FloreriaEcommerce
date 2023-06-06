@@ -70,6 +70,16 @@ const clienteSchema = mongoose.Schema({
         required: true,
         trim: true,
     },
+    apellidoCliente: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    usernameCliente: {
+        type: String,
+        required: true,
+        trim: true,
+    },
     passwordCliente: {
         type: String,
         required: true,

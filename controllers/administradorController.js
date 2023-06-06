@@ -17,13 +17,14 @@ const registroAdministrador = async (req, res) => {
 
     try {
         const administrador = new Administrador(req.body);
+        administrador.usernameAdministrador = `${administrador.nombreAdministrador} ${administrador.apellidoAdministrador}`;
         administrador.tokenAdministrador = generarID();
         await administrador.save();
 
         // Enviamos el email de confirmación
         emailRegistro({
             email: administrador.emailAdministrador,
-            nombre:administrador.nombreAdministrador,
+            nombre: administrador.usernameAdministrador,
             token: administrador.tokenAdministrador
         })
 
@@ -52,7 +53,7 @@ const autenticacionAdministrador = async (req, res) => {
     // Confirmamos la password
     if(await administrador.comprobarPassword(passwordAdministrador)){
         res.json({_id: administrador._id,
-            nombre: administrador.nombreAdministrador,
+            username: administrador.usernameAdministrador,
             email: administrador.emailAdministrador,
             token: generarJWT(administrador._id)});
     }
@@ -96,7 +97,7 @@ const olvidePassword = async (req, res) => {
         // Enviamos el email para restablecer la contraseña
         emailRestablecer({
             email: administrador.emailAdministrador,
-            nombre: administrador.nombreAdministrador,
+            nombre: administrador.usernameAdministrador,
             token: administrador.tokenAdministrador
         })
         res.json({
@@ -163,7 +164,7 @@ const modificarPassword = async (req, res) => {
     try {
         administradorAModificar.passwordAdministrador = newPassword;
         administradorAModificar.save();
-        res.json({msg: "Contraseña modificada exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -182,11 +183,11 @@ const modificarUsername = async (req, res) => {
     }
     // Realizamos la operación
     try {
-        let username;
-        username = `${nombre} ${apellido}`;
-        administradorAModificar.nombreAdministrador = username;
+        administradorAModificar.nombreAdministrador = nombre;
+        administradorAModificar.apellidoAdministrador = apellido;
+        administradorAModificar.usernameAdministrador = `${administradorAModificar.nombreAdministrador} ${administradorAModificar.apellidoAdministrador}`;
         administradorAModificar.save();
-        res.json({msg: "Nombre de usuario modificado exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }
@@ -207,7 +208,7 @@ const modificarTelefono = async (req, res) => {
     try {
         administradorAModificar.telefonoAdministrador = telefono;
         administradorAModificar.save();
-        res.json({msg: "Teléfono modificado exitosamente."});
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }

@@ -8,6 +8,16 @@ const administradorSchema = mongoose.Schema({
         required: true,
         trim: true,
     },
+    apellidoAdministrador: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    usernameAdministrador: {
+        type: String,
+        required: true,
+        trim: true,
+    },
     passwordAdministrador: {
         type: String,
         required: true,

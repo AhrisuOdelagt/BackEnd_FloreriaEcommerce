@@ -17,13 +17,14 @@ const registroCliente = async (req, res) => {
 
     try {
         const cliente = new Cliente(req.body);
+        cliente.usernameCliente = `${cliente.nombreCliente} ${cliente.apellidoCliente}`;
         cliente.tokenCliente = generarID();
         await cliente.save();
 
         // Enviamos el email de confirmación
         emailRegistro({
             email: cliente.emailCliente,
-            nombre: cliente.nombreCliente,
+            nombre: cliente.usernameCliente,
             token: cliente.tokenCliente
         })
 
@@ -52,7 +53,7 @@ const autenticacionCliente = async (req, res) => {
     // Confirmamos la password
     if(await cliente.comprobarPassword(passwordCliente)){
         res.json({_id: cliente._id,
-            nombre: cliente.nombreCliente,
+            username: cliente.usernameCliente,
             email: cliente.emailCliente,
             token: generarJWT(cliente._id)});
     }
@@ -95,7 +96,7 @@ const olvidePassword = async (req, res) => {
         // Enviamos el email para restablecer la contraseña
         emailRestablecer({
             email: cliente.emailCliente,
-            nombre: cliente.nombreCliente,
+            nombre: cliente.usernameCliente,
             token: cliente.tokenCliente
         })
         res.json({
@@ -181,9 +182,9 @@ const modificarUsername = async (req, res) => {
     }
     // Realizamos la operación
     try {
-        let username;
-        username = `${nombre} ${apellido}`;
-        clienteAModificar.nombreCliente = username;
+        clienteAModificar.nombreCliente = nombre;
+        clienteAModificar.apellidoCliente = apellido;
+        clienteAModificar.usernameCliente = `${clienteAModificar.nombreCliente} ${clienteAModificar.apellidoCliente}`;
         clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {

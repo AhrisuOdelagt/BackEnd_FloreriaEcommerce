@@ -26,10 +26,10 @@ export const emailRegistro = async (datos) => {
     console.log(email);
     // Información del email
     const info = await transport.sendMail({
-        from: '"Florería Ecommerce — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
+        from: '"Florería Jardín del Edén — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
         to: email,
-        subject: "Florería Ecommerce — Confirma tu cuenta",
-        text: "Comprueba tu cuenta en Florería Ecommerce",
+        subject: "Florería Jardín del Edén — Confirma tu cuenta",
+        text: "Comprueba tu cuenta en Jardín del Edén",
         /*html: `
         <p>Hola, ${nombre}, comprueba tu cuenta en Florería Ecommerce.</p>
         <p>Tu cuenta está casi lista, sólo debes comprobarla en el siguiente enlace:
@@ -71,10 +71,10 @@ export const emailRestablecer = async (datos) => {
   console.log(email);
   // Información del email
   const info = await transport.sendMail({
-      from: '"Florería Ecommerce — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
+      from: '"Florería Jardín del Edén — Administrador de la Base de Datos" <fjardindeled@gmail.com>',
       to: email,
-      subject: "Florería Ecommerce — Restablecer contraseña",
-      text: "Restablece tu contraseña en Florería Ecommerce",
+      subject: "Florería Jardín del Edén — Restablecer contraseña",
+      text: "Restablece tu contraseña en Florería Jardín del Edén",
       /*html: `
       <p>Hola, ${nombre}, comprueba tu cuenta en Florería Ecommerce.</p>
       <p>Tu cuenta está casi lista, sólo debes comprobarla en el siguiente enlace:

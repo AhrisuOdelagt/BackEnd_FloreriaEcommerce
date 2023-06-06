@@ -3,6 +3,7 @@ import { registroProducto,
         modificarProducto,
         eliminarProducto,
         verProducto,
+        mostrarProductos,
         mostrarFlores,
         mostrarPeluches } from "../controllers/productosController.js";
 import checkAuthAdmin from "../middleware/checkAuthAdmin.js"
@@ -18,6 +19,8 @@ router.post("/modificarProducto", checkAuthAdmin, modificarProducto);
 router.post("/eliminarProducto", checkAuthAdmin, eliminarProducto);
 // Ver producto
 router.post("/verProducto", checkAuthAdmin, verProducto);
+// Mostrar Productos (CRUD)
+router.get("/mostrarProductos", mostrarProductos);
 
 /* Catálogo */
 // Mostrar flores

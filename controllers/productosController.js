@@ -327,6 +327,15 @@ const eliminarProducto = async(req, res) => {
     }
 }
 
+const mostrarProductos = async (req, res) => {
+    try {
+        const documentos = await Producto.find();
+        res.json({ products: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const mostrarFlores = async (req, res) => {
     try {
 
@@ -357,6 +366,7 @@ export{registroProducto,
     verProducto,
     modificarProducto,
     eliminarProducto,
+    mostrarProductos,
     mostrarFlores,
     mostrarPeluches
 };

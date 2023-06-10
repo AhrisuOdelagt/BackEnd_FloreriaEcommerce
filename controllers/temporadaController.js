@@ -1,8 +1,18 @@
 import Temporada from "../modelos/temporadas.js";
 import Producto from "../modelos/productos.js";
+import Administrador from "../modelos/administrador.js";
 
 // Registro de temporadas en la base de datos
 const registroTemporada = async (req, res) => {
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
     // Evitar temporadas duplicadas sin lanzar errores en la consola
     const { nombreTemporada,
             peluches,
@@ -40,6 +50,12 @@ const registroTemporada = async (req, res) => {
         return res.status(400).json({ msg: error.message });
     }
 
+    // Validamos que el descuento no sea mayor a 100% ni menor a 0%
+    if(descuentoTemporada < 0 && descuentoTemporada > 100){
+        const error = new Error("Descuento inválido");  /* Mensaje faltante */
+        return res.status(400).json({ msg: error.message });
+    }
+
     try {
         // Guardamos la nueva temporada
         const temporada = new Temporada({nombreTemporada, descrTemporada, descuentoTemporada});
@@ -58,11 +74,163 @@ const registroTemporada = async (req, res) => {
         await producto2.save();
 
         res.json({
-            msg: "Temporada creada correctamente"
+            msg: "La temporada ha sido creada con éxito"
         });
     } catch (error) {
         console.log(error);
     }
 };
 
-export { registroTemporada };
+const modificarTemporada = async (req, res) => {
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    let { nombreTemporada,
+            newName,
+            descrTemporada,
+            descuentoTemporada } = req.body;
+    const temporadaAModificar = await Temporada.findOne({ nombreTemporada });
+
+    // Validamos si existe la temporada
+    if(!temporadaAModificar){
+        const error = new Error("Temporada no registrada"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificar que no haya conflictos al nombrar
+    if(nombreTemporada != newName){
+        nombreTemporada = newName;
+        const existeTemporada = Temporada.findOne({ nombreTemporada });
+        if(existeTemporada){
+            const error = new Error("Esta temporada ya existe"); /* Mensaje faltante */
+            return res.status(403).json({msg: error.message});
+        }
+    }
+
+    // Validamos que el descuento no sea mayor a 100% ni menor a 0%
+    if(descuentoTemporada < 0 && descuentoTemporada > 100){
+        const error = new Error("Descuento inválido");  /* Mensaje faltante */
+        return res.status(400).json({ msg: error.message });
+    }
+
+    // Actualizamos información
+    try {
+        // Actualizaciones sencillas
+        temporadaAModificar.nombreTemporada = nombreTemporada;
+        temporadaAModificar.descrTemporada = descrTemporada;
+        // Actualizaciones complejas
+        temporadaAModificar.descuentoTemporada = descuentoTemporada;
+        const id = temporadaAModificar._id;
+        const productos = await Producto.find({ "temporadaProducto": id });
+        for (let index = 0; index < productos.length; index++) {
+            const producto = await Producto.findOne({ _id: productos[index] });
+            producto.descuentoProducto = temporadaAModificar.descuentoTemporada;
+            producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
+            await producto.save();
+        }
+        await temporadaAModificar.save();
+        res.json({msg: "Se ha modificado la temporada"});  /* Mensaje faltante */
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const verTemporada = async (req, res) => {
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreTemporada } = req.body;
+
+    // Validamos si existe la temporada
+    const temporada = await Temporada.findOne({ nombreTemporada });
+    if(!temporada){
+        const error = new Error("Temporada no registrada"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Ver temporada
+    try {
+        res.json(temporada);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const eliminarTemporada = async (req, res) => {
+    // Autenticación del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreTemporada } = req.body;
+    const temporada = await Temporada.findOne({ nombreTemporada });
+
+    // Validamos si existe la temporada
+    if(!temporada){
+        const error = new Error("Temporada no registrada"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Eliminamos la temporada
+    try {
+        // Primero, eliminamos toda aparición de dicha temporada en toda la colección de productos
+        // Seguido, reiniciamos los descuentos
+        const id = temporada._id;
+        const productos = await Producto.find({ "temporadaProducto": id });
+        let temp = [];
+        for (let index = 0; index < productos.length; index++) {
+            const producto = await Producto.findOne({ _id: productos[index] });
+            // Reinicio del descuento
+            producto.descuentoProducto = 0;
+            producto.precioDescuento = producto.precioProducto;
+            // Removemos la temporada del arreglo
+            temp = producto.temporadaProducto;
+            let newTemp = []
+            for (let i = 0; i < temp.length; i++) {
+                if(!temp[i].equals(id)){
+                    newTemp.push(temp[i]);
+                }
+                // console.log(id);
+                // console.log(temp[i]);
+            }
+            producto.temporadaProducto = newTemp;
+            await producto.save();
+        }
+        // Finalmente, eliminamos el documento que contiene la temporada
+        await temporada.deleteOne();
+        res.json({msg: "Se ha eliminado la temporada correctamente"});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const mostrarTemporadas = async (req, res) => {
+    try {
+        const documentos = await Temporada.find();
+        res.json({ seasons: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export { registroTemporada,
+        modificarTemporada,
+        verTemporada,
+        eliminarTemporada,
+        mostrarTemporadas };

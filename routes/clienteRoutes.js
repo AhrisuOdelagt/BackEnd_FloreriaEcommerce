@@ -8,11 +8,19 @@ import { registroCliente,
     perfil,
     modificarPassword,
     modificarUsername,
-    /*modificarEmail,*/
     modificarTelefono,
     modificarDireccion,
-    modificarTarjeta } from "../controllers/clienteController.js";
-import checkAuth from "../middleware/checkAuth.js"
+    modificarTarjeta,
+    valorarProducto,
+    agregarComentario,
+    agregarProductoCarrito,
+    incrementarProductoCarrito,
+    decrementarProductoCarrito,
+    eliminarProductoCarrito,
+    vaciarCarrito,
+    visualizarCarrito,
+    verHistorialPedidos } from "../controllers/clienteController.js";
+import checkAuth from "../middleware/checkAuth.js";
 const router = express.Router();
 
 // Creación de usuario e inicio de sesión
@@ -27,9 +35,20 @@ router.get("/perfil", checkAuth, perfil);
 // Modificar Datos Personales
 router.post("/modificar/password", checkAuth, modificarPassword);
 router.post("/modificar/username", checkAuth, modificarUsername);
-// router.post("/modificar/email", checkAuth, modificarEmail);
 router.post("/modificar/telefono", checkAuth, modificarTelefono);
 router.post("/modificar/direccion", checkAuth, modificarDireccion);
 router.post("/modificar/tarjeta", checkAuth, modificarTarjeta);
+// Interacción con productos
+router.post("/interaccionPro/valorar", checkAuth, valorarProducto);
+router.post("/interaccionPro/comentar", checkAuth, agregarComentario);
+// Interacción con carrito
+router.post("/carrito/agregarProducto", checkAuth, agregarProductoCarrito);
+router.post("/carrito/incrementarProducto", checkAuth, incrementarProductoCarrito);
+router.post("/carrito/decrementarProducto", checkAuth, decrementarProductoCarrito);
+router.post("/carrito/eliminarProducto", checkAuth, eliminarProductoCarrito);
+router.get("/carrito/vaciarCarrito", checkAuth, vaciarCarrito);
+router.get("/carrito/visualizarCarrito", checkAuth, visualizarCarrito);
+// Interacción con pedidos
+router.get("/interaccionPed/visualizar", checkAuth, verHistorialPedidos);
 
 export default router;

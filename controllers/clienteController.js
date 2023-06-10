@@ -1,4 +1,5 @@
 import Cliente from "../modelos/cliente.js";
+import Producto from "../modelos/productos.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
 import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
@@ -135,7 +136,7 @@ const nuevoPasswordRec = async (req, res) => {
     try {
         cliente.passwordCliente = nuevaPassword;
         cliente.tokenCliente = undefined;
-        cliente.save();
+        await cliente.save();
         res.json({msg: "Cambio guardado exitosamente"})
     } catch (error) {
         console.log(error);
@@ -162,7 +163,7 @@ const modificarPassword = async (req, res) => {
     // Realizamos la operación
     try {
         clienteAModificar.passwordCliente = newPassword;
-        clienteAModificar.save();
+        await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
@@ -185,7 +186,7 @@ const modificarUsername = async (req, res) => {
         clienteAModificar.nombreCliente = nombre;
         clienteAModificar.apellidoCliente = apellido;
         clienteAModificar.usernameCliente = `${clienteAModificar.nombreCliente} ${clienteAModificar.apellidoCliente}`;
-        clienteAModificar.save();
+        await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
@@ -233,7 +234,7 @@ const modificarTelefono = async (req, res) => {
     // Realizamos la operación
     try {
         clienteAModificar.telefonoCliente = telefono;
-        clienteAModificar.save();
+        await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
@@ -271,7 +272,7 @@ const modificarDireccion = async (req, res) => {
             indicacionesAd: adicionales
         };
         clienteAModificar.direccionCliente.push(direccion);
-        clienteAModificar.save();
+        await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
@@ -303,8 +304,438 @@ const modificarTarjeta = async (req, res) => {
             titularTarjeta: titular
         };
         clienteAModificar.direccionCliente.push(direccion);
-        clienteAModificar.save();
+        await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+/* Funciones relacionadas con productos */
+// Valorar Producto
+const valorarProducto = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+    
+    // Iniciamos valoración
+    const { nombreProducto,
+            valoracion } = req.body;
+
+    // Revisamos que el producto exista
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos que la valoración sea válida
+    if(valoracion < 0 || valoracion > 5){
+        const error = new Error("Ocurrió un error"); /* Mensaje sin mostrar */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos que el cliente no haya valorado antes
+    let usuarios = producto.usersVal;
+    for (let index = 0; index < usuarios.length; index++) {
+        if(cliente.emailCliente = usuarios[index]){
+            const error = new Error("El cliente ya ha valorado este producto"); /* Mensaje faltante */
+            return res.status(403).json({msg: error.message}); 
+        }
+    }
+
+    // Realizamos valoración
+    try {
+        producto.valoracionesProducto.push(valoracion);
+        let valArray = producto.valoracionesProducto;
+        let promedioVal = 0;
+        for (let index = 0; index < valArray.length; index++) {
+            promedioVal = promedioVal + valArray[index];
+        }
+        promedioVal = promedioVal / valArray.length;
+        producto.valoracionGlobal = promedioVal;
+        producto.usersVal.push(cliente.emailCliente);
+        await producto.save();
+
+        res.json({ msg: "Valoración guardada" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Agregar Comentario
+const agregarComentario = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    const nombre = cliente.usernameCliente;
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Iniciamos valoración
+    const { nombreProducto,
+            comentario} = req.body;
+
+    // Revisamos que el producto exista
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos que el cliente no haya valorado antes
+    let usuarios = producto.usersComm;
+    for (let index = 0; index < usuarios.length; index++) {
+        if(cliente.emailCliente = usuarios[index]){
+            const error = new Error("El cliente ya ha valorado este producto"); /* Mensaje faltante */
+            return res.status(403).json({msg: error.message}); 
+        }
+    }
+
+    // Realizamos comentario
+    try {
+        const comment = {
+            commentUsername: nombre,
+            commentContent: comentario
+        };
+        producto.comentariosProducto.push(comment);
+        producto.usersComm.push(cliente.emailCliente);
+        await producto.save();
+
+        res.json({ msg: "Valoración guardada" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+/* Funciones relacionadas con el carrito de compras */
+// Añadir producto al carrito
+const agregarProductoCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const productoPedido = await Producto.findOne({ nombreProducto });
+    if(!productoPedido){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto no se haya añadido previamente
+    let productosCarrito = cliente.carritoCompras;
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            const error = new Error("El producto ya se encuentra en el carrito");   /* Mensaje faltante */
+            return res.status(400).json({ msg: error.message });
+        }
+    }
+
+    // Verificamos que el producto no esté agotado
+    if(productoPedido.cantidadInv <= 0){
+        const error = new Error("Producto agotado");
+        return res.status(400).json({ msg: error.message });
+    }
+
+    // Añadimos producto al carrito
+    try {
+        const carrito = {
+            producto_C: productoPedido.nombreProducto,
+            cantidad_C: 1,
+            totalParcial_C: productoPedido.precioDescuento,
+            copiaInv_C: productoPedido.cantidadInv
+        }
+        cliente.carritoCompras.push(carrito);
+        await cliente.save();
+        res.json({
+            msg: "Se inicio el carrito"
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Incrementar un producto en el carrito
+const incrementarProductoCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const productoPedido = await Producto.findOne({ nombreProducto });
+    if(!productoPedido){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto se encuentre en el carrito
+    let productosCarrito = cliente.carritoCompras;
+    let isPresent = false;
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            isPresent = true;
+        }
+    }
+    if(isPresent == false){
+        const error = new Error("El producto no está en el carrito");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto pueda incrementarse
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            let test = productosCarrito[index].cantidad_C + 1;
+            if(test > productosCarrito[index].copiaInv_C || test > 49){
+                const error = new Error("Has alcanzado el límite de artículos permitidos");  /* Mensaje faltante */
+                return res.status(403).json({msg: error.message});
+            }
+        }
+        break;
+    }
+
+    // Añadimos el mismo producto otra vez
+    try {
+        for (let index = 0; index < productosCarrito.length; index++) {
+            console.log(index);
+            console.log(productosCarrito[index].producto_C);
+            console.log(nombreProducto);
+            if(productosCarrito[index].producto_C == nombreProducto){
+                productosCarrito[index].cantidad_C += 1;
+                productosCarrito[index].totalParcial_C = productoPedido.precioDescuento * productosCarrito[index].cantidad_C;
+                await cliente.save();
+                break;
+            }
+        }
+        res.json({ msg: "El producto se añadió al carrito" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Decrementar un producto en el carrito
+const decrementarProductoCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const productoPedido = await Producto.findOne({ nombreProducto });
+    if(!productoPedido){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto se encuentre en el carrito
+    let productosCarrito = cliente.carritoCompras;
+    let isPresent = false;
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            isPresent = true;
+        }
+    }
+    if(isPresent == false){
+        const error = new Error("El producto no está en el carrito");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto pueda decrementarse
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            let test = productosCarrito[index].cantidad_C - 1;
+            if(test < 0){
+                const error = new Error("El producto no puede decrementarse");  /* Mensaje faltante */
+                return res.status(403).json({msg: error.message});
+            }
+        }
+        break;
+    }
+
+    // Decrementamos el producto una vez
+    try {
+        for (let index = 0; index < productosCarrito.length; index++) {
+            console.log(index);
+            console.log(productosCarrito[index].producto_C);
+            console.log(nombreProducto);
+            if(productosCarrito[index].producto_C == nombreProducto){
+                if(productosCarrito[index].cantidad_C > 1){
+                    productosCarrito[index].cantidad_C -= 1;
+                    productosCarrito[index].totalParcial_C = productoPedido.precioDescuento * productosCarrito[index].cantidad_C;
+                    await cliente.save();
+                    res.json({ msg: "El producto se removió del carrito" });
+                    break;
+                }
+                else if(productosCarrito[index].cantidad_C <= 1){
+                    productosCarrito[index].cantidad_C -= 1;
+                    productosCarrito[index].totalParcial_C = productoPedido.precioDescuento * productosCarrito[index].cantidad_C;
+                    let newCarrito = [];
+                    let productosCarrito2 = [...productosCarrito]; 
+                    for (let j = 0; j < productosCarrito2.length; j++) {
+                        console.log(j);
+                        console.log(productosCarrito2[j].producto_C);
+                        console.log(nombreProducto);
+                        if(productosCarrito2[j].cantidad_C !== 0){
+                            newCarrito.push(productosCarrito2[j]);
+                            console.log("Agregado");
+                        }
+                    }
+                    console.log(newCarrito);
+                    cliente.carritoCompras = newCarrito;
+                    await cliente.save();
+                    res.json({ msg: "El producto ha sido eliminado con éxito" });
+                    break;
+                }
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Decrementar un producto en el carrito
+const eliminarProductoCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const productoPedido = await Producto.findOne({ nombreProducto });
+    if(!productoPedido){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto se encuentre en el carrito
+    let productosCarrito = cliente.carritoCompras;
+    let isPresent = false;
+    for (let index = 0; index < productosCarrito.length; index++) {
+        if(productosCarrito[index].producto_C == nombreProducto){
+            isPresent = true;
+        }
+    }
+    if(isPresent == false){
+        const error = new Error("El producto no está en el carrito");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Eliminamos el producto del carrito
+    try {
+        let newCarrito = [];
+        for (let j = 0; j < productosCarrito.length; j++) {
+            if(productosCarrito[j].producto_C !== nombreProducto){
+                newCarrito.push(productosCarrito[j]);
+                console.log("Agregado");
+            }
+        }
+        cliente.carritoCompras = newCarrito;
+        await cliente.save();
+        res.json({ msg: "El producto ha sido eliminado con éxito" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Vaciar carrito de compras
+const vaciarCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Vaciamos el carrito
+    try {
+        cliente.carritoCompras = [];
+        cliente.save();
+        res.json({ msg: "El carrito se ha vaciado" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const visualizarCarrito = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos que el carrito no esté vacíos
+    if(cliente.carritoCompras.length == 0){
+        const error = new Error("Su carrito de compras está vacío"); /* Mensaje faltante */
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Mostramos el carrito
+    try {
+        res.json({ carrito: cliente.carritoCompras });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+/* Funciones relacionadas con Pedidos */
+// Ver historial de pedidos
+const verHistorialPedidos = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos la longitud del arreglo de Pedidos
+    if(cliente.pedidosCliente < 1){
+        const error = new Error("Sin pedidos");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Revisamos el historial de pedidos
+    try {
+        res.json(cliente.pedidosCliente);
     } catch (error) {
         console.log(error);
     }
@@ -319,7 +750,15 @@ export { registroCliente,
     perfil,
     modificarPassword,
     modificarUsername,
-    /*modificarEmail,*/
     modificarTelefono,
     modificarDireccion,
-    modificarTarjeta };
+    modificarTarjeta,
+    valorarProducto,
+    agregarComentario,
+    agregarProductoCarrito,
+    incrementarProductoCarrito,
+    decrementarProductoCarrito,
+    eliminarProductoCarrito,
+    vaciarCarrito,
+    visualizarCarrito,
+    verHistorialPedidos };

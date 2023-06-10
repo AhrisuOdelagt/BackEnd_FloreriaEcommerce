@@ -63,6 +63,27 @@ const tarjetaSchema = mongoose.Schema({
     },
 });
 
+// Creación del esquema del documento embebido CarritoCompras
+const carritoComprasSchema = mongoose.Schema({
+    _id : false,
+    producto_C: {
+        type: String,
+        trim: true,
+    },
+    cantidad_C: {
+        type: Number,
+        trim: true,
+    },
+    totalParcial_C: {
+        type: Number,
+        trim: true,
+    },
+    copiaInv_C: {
+        type: Number,
+        trim: true
+    }
+});
+
 // Creación del esquema de la colección Cliente -----
 const clienteSchema = mongoose.Schema({
     nombreCliente: {
@@ -107,8 +128,12 @@ const clienteSchema = mongoose.Schema({
         type: [tarjetaSchema],
     },
     pedidosCliente: {
-        type: [String],
-        default: "default reference",
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Pedido",
+        trim: true,
+    },
+    carritoCompras: {
+        type: [carritoComprasSchema],
     },
     tokenCliente: {
         type: String,

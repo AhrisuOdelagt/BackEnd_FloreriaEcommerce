@@ -1,20 +1,23 @@
 import mongoose, { Schema } from "mongoose";
 
 // Creación del esquema del documento embebido Detalles
-const carritoSchema = mongoose.Schema({
+const detallesSchema = mongoose.Schema({
     _id : false,
-    producto: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref : "Producto",
+    producto_P: {
+        type: String,
         trim: true,
     },
-    cantidad: {
+    cantidad_P: {
         type: Number,
         trim: true,
     },
-    totalParcial: {
+    totalParcial_P: {
         type: Number,
         trim: true,
+    },
+    copiaInv_P: {
+        type: Number,
+        trim: true
     }
 });
 
@@ -41,14 +44,6 @@ const pedidosSchema = mongoose.Schema({
         type: Number,
         trim: true,
     },
-    valoracion: {
-        type: Number,
-        trim: true,
-    },
-    comentario: {
-        type: String,
-        trim: true,
-    },
     isPaid: {
         type: Boolean,
         trim: true,
@@ -65,7 +60,7 @@ const pedidosSchema = mongoose.Schema({
         default: false,
     },
     detallesPedido: {
-        type: [carritoSchema],
+        type: [detallesSchema],
     }
 });
 

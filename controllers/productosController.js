@@ -163,6 +163,7 @@ const modificarProducto = async (req, res) => {
         productoAModificar.precioProducto = precioProducto;
         productoAModificar.cantidadInv = cantidadInv;
         productoAModificar.categoriaProducto = categoriaProducto;
+        productoAModificar.descuentoProducto = descuentoProducto;
         productoAModificar.precioDescuento = precioProducto - (productoAModificar.descuentoProducto * precioProducto)/100;
 
 

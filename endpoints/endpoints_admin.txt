@@ -1,0 +1,48 @@
+--- Registro & Login ---
+
+-- Registrar Administrador
+URL:	http://localhost:27017/api/administrador
+Body:	{
+    "nombreAdministrador": "La Luna Luna",
+    "passwordAdministrador": "password",
+    "emailAdministrador": "lalunaluna1950@gmail.com"
+}
+
+
+-- Confirmar Administrador
+URL:	http://localhost:27017/api/administrador/confirmar/36870
+(Dinámico, de tipo GET; cambiar el número del final por un token válido)
+
+
+
+-- Autenticación Administrador
+URL:	http://localhost:27017/api/administrador/iniSes
+Body:	{
+    "emailAdministrador": "lalunaluna1950@gmail.com",
+    "passwordAdministrador": "lunaluna"
+}
+
+
+
+--- Olvidé Password ---
+
+-- Olvidé Password Admin
+URL:	http://localhost:27017/api/administrador/olvide-password
+Body:	{
+    "emailAdministrador": "lalunaluna1950@gmail.com"
+}
+
+
+
+-- Verificar Token Admin
+URL:	http://localhost:27017/api/administrador/olvide-password/83142
+(Dinámico, de tipo GET; cambiar el número del final por un token válido)
+
+
+
+-- Nuevo Password Admin
+URL:	http://localhost:27017/api/administrador/olvide-password/83142
+(Dinámico, de tipo POST; cambiar el número del final por un token válido)
+Body:	{
+    "nuevaPassword": "lunaluna"
+}

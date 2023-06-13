@@ -1,48 +1,247 @@
-import Pedido from "../modelos/temporadas.js";
+import Pedido from "../modelos/pedidos.js";
 import Cliente from "../modelos/cliente.js";
 import Producto from "../modelos/productos.js";
 
-// Añadir producto al carrito   ¡¡Función relocalizada en Cliente (Eliminar ésta después)!!
-const agregarProducto = async (req, res) => {
-    
-    const { nombreProducto } = req.body;
-
-    // Verificamos que el producto no se haya añadido previamente
-    let producto = nombreProducto
-    const existeProducto_Pedido = Pedido.findOne({ "carritoCompras.producto": producto });
-    if(existeProducto_Pedido){
-        const error = new Error("El producto ya se encuentra en el carrito");   /* Mensaje faltante */
-        return res.status(400).json({ msg: error.message });
+// Generar pedido
+const generarPedido = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
     }
 
-    // Verificamos que el producto no esté agotado
-    const productoPedido = Producto.findOne({ nombreProducto });
-    if(productoPedido.cantidadInv <= 0){
-        const error = new Error("Producto agotado");   /* Mensaje faltante */
-        return res.status(400).json({ msg: error.message });
+    // Validamos que el carrito no esté vacío
+    if(cliente.carritoCompras.length < 1){
+        const error = new Error("Su carrito de compras está vacío"); /* Mensaje faltante */
+        return res.status(404).json({msg: error.message});
     }
 
-    // Añadimos producto al carrito
+    // Generamos el pedido
     try {
-        const pedido = new Pedido();
-        const carrito = {
-            producto: productoPedido.nombreProducto,
-            cantidad: 1,
-            totalParcial: productoPedido.precioDescuento,
-            copiaInv: productoPedido.cantidadInv
-        }
-        pedido.carritoCompras.push(carrito);
+        const nombrePedido = `${cliente.usernameCliente}_${Date.now().toString()}`
+        const pedido = new Pedido({ nombrePedido });
         await pedido.save();
-        cliente.pedidosCliente.push(pedido._id);
+        // Definimos los detalles del pedido
+        pedido.detallesPedido = [];
+        let compras = cliente.carritoCompras;
+        // console.log(compras);
+        for (let index = 0; index < compras.length; index++) {
+            let detalles = {
+                producto_P: compras[index].producto_C,
+                cantidad_P: compras[index].cantidad_C,
+                totalParcial_P: compras[index].totalParcial_C,
+            }
+            pedido.detallesPedido.push(detalles);
+        }
+        await pedido.save();
+        // Definimos el resto de atributos del pedido
+        let comprasPedido = pedido.detallesPedido;
+        for (let index = 0; index < comprasPedido.length; index++) {
+            pedido.costoArticulos += comprasPedido[index].totalParcial_P;
+            pedido.totalArticulos += comprasPedido[index].cantidad_P;
+        }
+        if(pedido.costoArticulos < 300){
+            pedido.costoEnvio += 50;
+        }
+        let total = pedido.costoArticulos + pedido.costoEnvio;
+        pedido.costoTotal = total;
+        await pedido.save();
+        // Almacenamos el nombre del pedido en los pedidos del cliente
+        cliente.pedidosCliente.push(pedido.nombrePedido);
         await cliente.save();
-        res.json({
-            msg: "Se inicio el carrito"
-        });
+        res.json({ msg: "Se ha generado el pedido" });  /* Mensaje faltante */
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+// Cancelar pedido
+const cancelarPedido = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el pedido exista
+    const { nombrePedido } = req.body;
+    const pedido = await Pedido.findOne({ nombrePedido });
+    if(!pedido){
+        const error = new Error("El número de pedido es incorrecto");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Cancelamos (removemos) el pedido
+    try {
+        // Buscamos y eliminamos las instancias del pedido a eliminar
+        const pedidos = cliente.pedidosCliente;
+        let newPedidos = [];
+        for (let index = 0; index < pedidos.length; index++) {
+            if(nombrePedido != pedidos[index]){
+                newPedidos.push(pedidos[index]);
+            }
+        }
+        cliente.pedidosCliente = newPedidos;
+        await cliente.save();
+        // Eliminamos el pedido
+        await pedido.deleteOne();
+        res.json({ msg: "Se ha cancelado el pedido" }); /* Mensaje faltante */
     } catch (error) {
         console.log(error);
     }
 }
 
-export {
-    agregarProducto
+// Pagar pedido
+const pagarPedido = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombrePedido,
+            metodoPago,
+            metodoEntrega,
+            fechaEntrega,
+            tarjetaPedido,
+            destinoPedido } = req.body;
+
+    const { numTarjeta_P,
+            fechaVencimiento_P,
+            cvv_P
+             } = tarjetaPedido;
+
+    const { codigoPostal_P,
+            colonia_P,
+            calle_P,
+            numInt_P,
+            numExt_P } = destinoPedido;
+
+    // Verificamos que exista el pedido
+    const pedido = await Pedido.findOne({ nombrePedido });
+    if(!pedido){
+        const error = new Error("El número de pedido es incorrecto");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Validamos que el pedido no se haya pagado
+    if(pedido.isPaid == true){
+        const error = new Error("Ocurrió un error");
+        return res.status(400).json({msg: error.message});
+    }
+    
+    // Validamos método de pago
+    if(metodoPago != "Tarjeta de débito o crédito" && metodoPago != "Transferencia"){
+        const error = new Error("Método de pago inválido"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Validamos método de entrega
+    if(metodoEntrega != "En dirección indicada" && metodoEntrega != "Recoger en Tienda"){
+        const error = new Error("Método de entrega inválido"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    /* Hallar modo de validar la fecha de entrega */
+
+    // Validamos el número de tarjeta
+    // Pendiente, ver si de verdad vale la pena validar el número de tarjeta
+
+    // Realizamos el pago
+    try {
+        // Llenamos la información
+        pedido.metodoPago = metodoPago;
+        pedido.metodoEntrega = metodoEntrega;
+        pedido.fechaEntrega = fechaEntrega;
+        // Verificamos el método de pago
+        if (metodoPago == "Transferencia") {
+            pedido.tarjetaPedido = undefined;
+        } else {
+            const tarjeta = {
+                numTarjeta_P: numTarjeta_P,
+                fechaVencimiento_P: fechaVencimiento_P,
+                cvv_P: cvv_P
+            };
+            pedido.tarjetaPedido = tarjeta;
+        }
+        // Verificamos método de entrega
+        if (metodoEntrega == "Recoger en Tienda") {
+            pedido.destinoPedido = undefined;
+        } else {
+            const destino = {
+                codigoPostal_P: codigoPostal_P,
+                colonia_P: colonia_P,
+                calle_P: calle_P,
+                numExt_P: numExt_P,
+                numInt_P: numInt_P
+            };
+            pedido.destinoPedido = destino;
+        }
+        // Marcamos el pedido como pagado
+        pedido.isPaid = true;
+        pedido.isDeployed = true;
+        await pedido.save();
+        // Actualizar inventario (pendiente)
+        let pedidos = pedido.detallesPedido;
+        for (let index = 0; index < pedidos.length; index++) {
+            let nombreProducto = pedidos[index].producto_P;
+            const producto = await Producto.findOne({ nombreProducto });
+            producto.cantidadInv -= pedidos[index].cantidad_P;
+            await producto.save();
+        }
+        // Vaciamos el carrito de compras del cliente
+        cliente.carritoCompras = [];
+        await cliente.save();
+        res.json({ msg: "El pedido se ha pagado" });    /* Mensajes faltante */
+    } catch (error) {
+        console.log(error);
+    }
 }
+
+const solicitarReembolso = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que exista el pedido
+    const { nombrePedido } = req.body;
+    const pedido = await Pedido.findOne({ nombrePedido });
+    if(!pedido){
+        const error = new Error("El número de pedido es incorrecto");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Validamos que no se haya solicitado ya el reembolso
+    if(pedido.returnReq == true){
+        const error = new Error("Ocurrió un error");
+        return res.status(400).json({msg: error.message});
+    }
+
+    // Solicitamos el reembolso
+    try {
+        pedido.returnReq = true;
+        await pedido.save();
+        res.json({ msg: "Se ha solicitado el reembolso" });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export { generarPedido,
+        cancelarPedido,
+        pagarPedido,
+        solicitarReembolso }; 

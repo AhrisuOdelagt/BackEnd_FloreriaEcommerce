@@ -133,11 +133,13 @@ const modificarProducto = async (req, res) => {
     }
 
     // Verificamos que no haya conflictos de nombre
-    nombreProducto = nuevoNombre;
-    const existeProducto = await Producto.findOne({ nombreProducto });
-    if(existeProducto){
-        const error = new Error("Este producto ya existe"); /* Mensaje faltante */
-        return res.status(403).json({msg: error.message});
+    if(nombreProducto != nuevoNombre){
+        nombreProducto = nuevoNombre;
+        const existeProducto = await Producto.findOne({ nombreProducto });
+        if(existeProducto){
+            const error = new Error("Este producto ya existe"); /* Mensaje faltante */
+            return res.status(403).json({msg: error.message});
+        }
     }
 
     // Validamos que el tipo de producto sea valido
@@ -338,7 +340,6 @@ const mostrarProductos = async (req, res) => {
 
 const mostrarFlores = async (req, res) => {
     try {
-
         // Especificamos que sólo se buscan flores
         const flores = { tipoProducto: "Flor" };
 
@@ -351,8 +352,7 @@ const mostrarFlores = async (req, res) => {
 
 const mostrarPeluches = async (req, res) => {
     try {
-
-        // Especificamos que sólo se buscan flores
+        // Especificamos que sólo se buscan peluches
         const peluches = { tipoProducto: "Peluche" };
 
         const documentos = await Producto.find(peluches);

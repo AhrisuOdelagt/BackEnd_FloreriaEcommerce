@@ -1,5 +1,6 @@
 import Cliente from "../modelos/cliente.js";
 import Producto from "../modelos/productos.js";
+import Pedido from "../modelos/pedidos.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
 import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
@@ -283,8 +284,7 @@ const modificarDireccion = async (req, res) => {
 const modificarTarjeta = async (req, res) => {
     let emailCliente;
     emailCliente = req.cliente.emailCliente;
-    const { tipo,
-            num,
+    const { num,
             fecha,
             c,
             titular } = req.body;
@@ -297,13 +297,12 @@ const modificarTarjeta = async (req, res) => {
     // Realizamos la operación
     try {
         const direccion = {
-            tipoTarjeta: tipo,
-            numeroTarjeta: num,
+            numTarjeta: num,
             fechaVencimiento: fecha,
             cvv: c,
             titularTarjeta: titular
         };
-        clienteAModificar.direccionCliente.push(direccion);
+        clienteAModificar.tarjetaCliente.push(direccion);
         await clienteAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
@@ -416,6 +415,52 @@ const agregarComentario = async (req, res) => {
     }
 }
 
+// Ver flores
+const verFlores = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Mostramos las flores para que el usuario pueda verlos
+    try {
+        // Especificamos que sólo se buscan flores
+        const flores = { tipoProducto: "Flor" };
+
+        const documentos = await Producto.find(flores);
+        res.json({ fleurs: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Ver peluches
+const verPeluches = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Mostramos los peluches para que el usuario pueda verlos
+    try {
+        // Especificamos que sólo se buscan peluches
+        const peluches = { tipoProducto: "Peluche" };
+
+        const documentos = await Producto.find(peluches);
+        res.json({ plushies: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 /* Funciones relacionadas con el carrito de compras */
 // Añadir producto al carrito
 const agregarProductoCarrito = async (req, res) => {
@@ -511,8 +556,8 @@ const incrementarProductoCarrito = async (req, res) => {
                 const error = new Error("Has alcanzado el límite de artículos permitidos");  /* Mensaje faltante */
                 return res.status(403).json({msg: error.message});
             }
+            break;
         }
-        break;
     }
 
     // Añadimos el mismo producto otra vez
@@ -702,7 +747,7 @@ const visualizarCarrito = async (req, res) => {
     }
 
     // Revisamos que el carrito no esté vacíos
-    if(cliente.carritoCompras.length == 0){
+    if(cliente.carritoCompras.length < 1){
         const error = new Error("Su carrito de compras está vacío"); /* Mensaje faltante */
         return res.status(404).json({msg: error.message});
     }
@@ -735,7 +780,65 @@ const verHistorialPedidos = async (req, res) => {
 
     // Revisamos el historial de pedidos
     try {
-        res.json(cliente.pedidosCliente);
+        // Revisamos y buscamos la información de todos los pedidos del cliente
+        const pedidos = cliente.pedidosCliente;
+        let documentos = [];
+        for (let index = 0; index < pedidos.length; index++) {
+            let nombrePedido = pedidos[index];
+            let pedido = await Pedido.findOne({ nombrePedido });
+            documentos.push(pedido);
+        }
+        res.json({ pedidosCliente: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Ver tarjetas registradas
+const verTarjetas = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Validamos que el usuario tenga tarjetas registradas
+    if(cliente.tarjetaCliente < 1){
+        const error = new Error("Este usuario no tiene tarjetas registradas"); /* Mensaje faltante */
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Retornamos la información
+    try {
+        res.json(cliente.tarjetaCliente);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Ver direcciones registradas
+const verDirecciones = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Validamos que el usuario tenga direcciones registradas
+    if(cliente.direccionCliente < 1){
+        const error = new Error("Este usuario no tiene direcciones registradas"); /* Mensaje faltante */
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Retornamos la información
+    try {
+        res.json(cliente.direccionCliente);
     } catch (error) {
         console.log(error);
     }
@@ -755,10 +858,14 @@ export { registroCliente,
     modificarTarjeta,
     valorarProducto,
     agregarComentario,
+    verPeluches,
+    verFlores,
     agregarProductoCarrito,
     incrementarProductoCarrito,
     decrementarProductoCarrito,
     eliminarProductoCarrito,
     vaciarCarrito,
     visualizarCarrito,
-    verHistorialPedidos };
+    verHistorialPedidos,
+    verTarjetas,
+    verDirecciones };

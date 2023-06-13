@@ -128,8 +128,7 @@ const clienteSchema = mongoose.Schema({
         type: [tarjetaSchema],
     },
     pedidosCliente: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: "Pedido",
+        type: [String],
         trim: true,
     },
     carritoCompras: {

@@ -27,7 +27,7 @@ app.use("/api/cliente", clienteRoutes);
 app.use("/api/temporada", temporadaRoutes);
 app.use("/api/productos", productosRoutes);
 app.use("/api/administrador", administradorRoutes);
-// app.use("api/pedidos", pedidosRoutes);
+app.use("/api/pedidos", pedidosRoutes);
 
 // Ocultamiento del puerto de conexión
 const PORT = process.env.PORT || 4000;

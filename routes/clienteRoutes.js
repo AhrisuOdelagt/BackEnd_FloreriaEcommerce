@@ -13,13 +13,17 @@ import { registroCliente,
     modificarTarjeta,
     valorarProducto,
     agregarComentario,
+    verPeluches,
+    verFlores,
     agregarProductoCarrito,
     incrementarProductoCarrito,
     decrementarProductoCarrito,
     eliminarProductoCarrito,
     vaciarCarrito,
     visualizarCarrito,
-    verHistorialPedidos } from "../controllers/clienteController.js";
+    verHistorialPedidos,
+    verTarjetas,
+    verDirecciones } from "../controllers/clienteController.js";
 import checkAuth from "../middleware/checkAuth.js";
 const router = express.Router();
 
@@ -41,6 +45,8 @@ router.post("/modificar/tarjeta", checkAuth, modificarTarjeta);
 // Interacción con productos
 router.post("/interaccionPro/valorar", checkAuth, valorarProducto);
 router.post("/interaccionPro/comentar", checkAuth, agregarComentario);
+router.get("/interaccionPro/verFlores", checkAuth, verFlores);
+router.get("/interaccionPro/verPeluches", checkAuth, verPeluches);
 // Interacción con carrito
 router.post("/carrito/agregarProducto", checkAuth, agregarProductoCarrito);
 router.post("/carrito/incrementarProducto", checkAuth, incrementarProductoCarrito);
@@ -50,5 +56,7 @@ router.get("/carrito/vaciarCarrito", checkAuth, vaciarCarrito);
 router.get("/carrito/visualizarCarrito", checkAuth, visualizarCarrito);
 // Interacción con pedidos
 router.get("/interaccionPed/visualizar", checkAuth, verHistorialPedidos);
+router.get("/interaccionPed/verTarjetas", checkAuth, verTarjetas);
+router.get("/interaccionPed/verDirecciones", checkAuth, verDirecciones);
 
 export default router;

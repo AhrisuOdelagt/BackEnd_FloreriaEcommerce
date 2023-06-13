@@ -1,0 +1,50 @@
+--- Generar, Cancelar y Pagar pedido ---
+(Requieren autenticación (JWT) del cliente)
+
+-- Generar Pedido
+Tipo: GET
+URL:	http://localhost:4000/api/pedidos
+
+
+
+-- Cancelar Pedido
+Tipo: POST
+URL:	http://localhost:4000/api/pedidos/cancelarPedido
+Body:	{
+    "nombrePedido": "Oder Franco Olvera_1686614188075"
+}
+
+
+
+-- Pagar Pedido
+Tipo: POST
+URL:	http://localhost:4000/api/pedidos/pagarPedido
+Body:	{
+    "nombrePedido": "Oder Franco Olvera_1686614535962",
+    "metodoPago": "Transferencia",
+    "metodoEntrega": "Recoger en Tienda",
+    "fechaEntrega": "Thu Jun 15 2023 20:54:03 GMT-0600 (hora estándar central)",
+    "tarjetaPedido": {
+        "numTarjeta_Ped": "",
+        "fechaVencimiento_Ped": "",
+        "cvv_Ped": ""
+    },
+    "destinoPedido": {
+        "codigoPostal_Ped": "",
+        "colonia_Ped": "",
+        "calle_Ped": "",
+        "numInt_Ped": "",
+        "numExt_Ped": ""
+    }
+}
+
+
+
+--- Solicitudes ---
+(Requieren autenticación (JWT) del cliente)
+
+-- Solicitar reembolso
+URL:	http://localhost:4000/api/pedidos/solicitarReembolso
+Body:	{
+    "nombrePedido": "Oder Franco Olvera_1686547318150"
+}

@@ -1,6 +1,7 @@
 import Temporada from "../modelos/temporadas.js";
 import Producto from "../modelos/productos.js";
 import Administrador from "../modelos/administrador.js";
+import Cliente from "../modelos/cliente.js";
 
 // Registro de temporadas en la base de datos
 const registroTemporada = async (req, res) => {
@@ -73,6 +74,38 @@ const registroTemporada = async (req, res) => {
         await producto1.save();
         await producto2.save();
 
+        // Verificamos que no existan modificaciones en carritos de compras (para ambos productos)
+        // Producto 1
+        let nombreProducto = producto1.nombreProducto;
+        let clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+        for (let i = 0; i < clientes.length; i++) {
+            let emailCliente = clientes[i].emailCliente;
+            const clienteAModificar = await Cliente.findOne({ emailCliente });
+            console.log(clienteAModificar);
+            let compras = clienteAModificar.carritoCompras;
+            for (let j = 0; j < compras.length; j++) {
+                if(compras[j].producto_C == nombreProducto){
+                    compras[j].totalParcial_C = producto1.precioDescuento;
+                }
+            }
+            await clienteAModificar.save();
+        }
+        // Producto 2
+        nombreProducto = producto2.nombreProducto;
+        clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+        for (let i = 0; i < clientes.length; i++) {
+            let emailCliente = clientes[i].emailCliente;
+            const clienteAModificar = await Cliente.findOne({ emailCliente });
+            console.log(clienteAModificar);
+            let compras = clienteAModificar.carritoCompras;
+            for (let j = 0; j < compras.length; j++) {
+                if(compras[j].producto_C == nombreProducto){
+                    compras[j].totalParcial_C = producto2.precioDescuento;
+                }
+            }
+            await clienteAModificar.save();
+        }
+
         res.json({
             msg: "La temporada ha sido creada con éxito"
         });
@@ -133,6 +166,22 @@ const modificarTemporada = async (req, res) => {
             producto.descuentoProducto = temporadaAModificar.descuentoTemporada;
             producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
             await producto.save();
+
+            // Actualizamos los precios del producto en cualquier carrito de compras
+            let nombreProducto = producto.nombreProducto;
+            const clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+            for (let i = 0; i < clientes.length; i++) {
+                let emailCliente = clientes[i].emailCliente;
+                const clienteAModificar = await Cliente.findOne({ emailCliente });
+                console.log(clienteAModificar);
+                let compras = clienteAModificar.carritoCompras;
+                for (let j = 0; j < compras.length; j++) {
+                    if(compras[j].producto_C == nombreProducto){
+                        compras[j].totalParcial_C = producto.precioDescuento;
+                    }
+                }
+                await clienteAModificar.save();
+            }
         }
         await temporadaAModificar.save();
         res.json({msg: "Se ha modificado la temporada"});  /* Mensaje faltante */
@@ -211,6 +260,22 @@ const eliminarTemporada = async (req, res) => {
             }
             producto.temporadaProducto = newTemp;
             await producto.save();
+            
+            // Actualizamos los precios del producto en cualquier carrito de compras
+            let nombreProducto = producto.nombreProducto;
+            const clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+            for (let i = 0; i < clientes.length; i++) {
+                let emailCliente = clientes[i].emailCliente;
+                const clienteAModificar = await Cliente.findOne({ emailCliente });
+                console.log(clienteAModificar);
+                let compras = clienteAModificar.carritoCompras;
+                for (let j = 0; j < compras.length; j++) {
+                    if(compras[j].producto_C == nombreProducto){
+                        compras[j].totalParcial_C = producto.precioDescuento;
+                    }
+                }
+                await clienteAModificar.save();
+            }
         }
         // Finalmente, eliminamos el documento que contiene la temporada
         await temporada.deleteOne();

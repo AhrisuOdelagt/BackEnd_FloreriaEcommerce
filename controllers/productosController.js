@@ -1,5 +1,6 @@
 import Producto from "../modelos/productos.js";
 import Administrador from "../modelos/administrador.js"
+import Cliente from "../modelos/cliente.js";
 // import Temporada from "../modelos/temporadas.js";
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -73,7 +74,7 @@ const registroProducto = async(req, res) => {
                         }
                         else{
                             resolve(result);
-                            producto.imagenProducto.push(result.public_id);
+                            await producto.imagenProducto.push(result.public_id);
                             // Guardamos cambios
                             await producto.save();
                         }
@@ -88,9 +89,9 @@ const registroProducto = async(req, res) => {
             return new Promise(resolve => setTimeout(resolve, ms));
           }
         for (let index = 0; index < imagenes.length; index++) {
-            await delay(200);
-            uploadImg(imagenes[index]);
-            await delay(200);
+            // await delay(50);
+            await uploadImg(imagenes[index]);
+            // await delay(50);
         }
 
         //Regresamos confirmacion
@@ -133,6 +134,7 @@ const modificarProducto = async (req, res) => {
     }
 
     // Verificamos que no haya conflictos de nombre
+    let oldName = nombreProducto;
     if(nombreProducto != nuevoNombre){
         nombreProducto = nuevoNombre;
         const existeProducto = await Producto.findOne({ nombreProducto });
@@ -259,6 +261,24 @@ const modificarProducto = async (req, res) => {
             await productoAModificar.save();
         }
 
+        // Revisamos que no haya cambios en algún carrito de compras
+        // Especificamos que sólo se buscan carritos cuyo contenido incluya algún producto con el viejo nombre
+        const clientes = await Cliente.find({ 'carritoCompras.producto_C': oldName });
+        // console.log(clientes);
+        for (let i = 0; i < clientes.length; i++) {
+            let emailCliente = clientes[i].emailCliente;
+            const clienteAModificar = await Cliente.findOne({ emailCliente });
+            let compras = clienteAModificar.carritoCompras;
+            for (let j = 0; j < compras.length; j++) {
+                if(compras[j].producto_C == oldName){
+                    compras[j].producto_C = productoAModificar.nombreProducto; 
+                    compras[j].totalParcial_C = productoAModificar.precioDescuento; 
+                    compras[j].copiaInv_C = productoAModificar.cantidadInv; 
+                }
+            }
+            await clienteAModificar.save();
+        }
+
         // Guardamos los cambios
         await productoAModificar.save();
         res.json({msg: "Cambio guardado exitosamente"});
@@ -321,6 +341,23 @@ const eliminarProducto = async(req, res) => {
         let arrImg = producto.imagenProducto;
         for (let index = 0; index < arrImg.length; index++) {
             removeImage(arrImg[index]);
+        }
+
+        // Borramos cualquier instancia del producto en cualquier carrito de compras
+        // Especificamos que sólo se buscan carritos cuyo contenido incluya algún producto con el viejo nombre
+        const clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+        for (let i = 0; i < clientes.length; i++) {
+            let emailCliente = clientes[i].emailCliente;
+            const clienteAModificar = await Cliente.findOne({ emailCliente });
+            let compras = clienteAModificar.carritoCompras;
+            let newCompras = [];
+            for (let j = 0; j < compras.length; j++) {
+                if(compras[j].producto_C != nombreProducto){
+                    newCompras.push(compras[j]);
+                }
+            }
+            clienteAModificar.carritoCompras = newCompras;
+            await clienteAModificar.save();
         }
 
         await producto.deleteOne();

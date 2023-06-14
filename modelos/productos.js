@@ -3,12 +3,33 @@ import mongoose, { Schema } from "mongoose";
 // Creación del esquema del documento embebido Comentarios
 const commentsSchema = mongoose.Schema({
     _id: false,
+    commentEmail: {
+        type: String,
+        trim: true,
+    },
     commentUsername: {
         type: String,
         trim: true,
     },
     commentContent: {
         type: String,
+        trim: true,
+    }
+});
+
+// Creación del esquema del documento embebido Valoraciones
+const scoresSchema = mongoose.Schema({
+    _id: false,
+    scoreEmail: {
+        type: String,
+        trim: true,
+    },
+    scoreUsername: {
+        type: String,
+        trim: true,
+    },
+    scoreContent: {
+        type: Number,
         trim: true,
     }
 });
@@ -69,24 +90,15 @@ const productosSchema = mongoose.Schema({
         trim: true, 
     },
     valoracionesProducto: {
-        type: [Number],
-        trim: true,
+        type: [scoresSchema],
     },
     valoracionGlobal: {
         type: Number,
         trim: true,
         default: 0,
     },
-    usersVal: {
-        type: [String],
-        trim: true,
-    },
     comentariosProducto: {
         type: [commentsSchema],
-    },
-    usersComm: {
-        type: [String],
-        trim: true,
     }
 });
 

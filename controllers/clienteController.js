@@ -340,26 +340,61 @@ const valorarProducto = async (req, res) => {
     }
 
     // Revisamos que el cliente no haya valorado antes
-    let usuarios = producto.usersVal;
-    for (let index = 0; index < usuarios.length; index++) {
-        if(cliente.emailCliente = usuarios[index]){
-            const error = new Error("El cliente ya ha valorado este producto"); /* Mensaje faltante */
-            return res.status(403).json({msg: error.message}); 
+    let valoraciones = producto.valoracionesProducto;
+    let existencia = false;
+    for (let index = 0; index < valoraciones.length; index++) {
+        if(valoraciones[index].scoreEmail == cliente.emailCliente){
+            existencia = true;
         }
     }
 
+    /*let usuarios = producto.usersVal;
+    for (let index = 0; index < usuarios.length; index++) {
+        if(cliente.emailCliente = usuarios[index]){
+            const error = new Error("El cliente ya ha valorado este producto"); /* Mensaje faltante */
+            /*return res.status(403).json({msg: error.message}); 
+        }
+    }*/
+
     // Realizamos valoración
     try {
-        producto.valoracionesProducto.push(valoracion);
-        let valArray = producto.valoracionesProducto;
-        let promedioVal = 0;
-        for (let index = 0; index < valArray.length; index++) {
-            promedioVal = promedioVal + valArray[index];
+        const score = {
+            scoreEmail: cliente.emailCliente,
+            scoreUsername: cliente.usernameCliente,
+            scoreContent: valoracion
         }
-        promedioVal = promedioVal / valArray.length;
-        producto.valoracionGlobal = promedioVal;
-        producto.usersVal.push(cliente.emailCliente);
-        await producto.save();
+        // Adjuntamos valoración si es la primera vez
+        if(existencia == false){
+            producto.valoracionesProducto.push(score);
+            let valArray = producto.valoracionesProducto;
+            let promedioVal = 0;
+            for (let index = 0; index < valArray.length; index++) {
+                promedioVal = promedioVal + valArray[index].scoreContent;
+            }
+            promedioVal = promedioVal / valArray.length;
+            producto.valoracionGlobal = promedioVal;
+            await producto.save();
+        }
+        else{
+            // Eliminamos la valoración previa
+            let valArray1 = producto.valoracionesProducto;
+            let valArray2 = [];
+            let promedioVal = 0;
+            for (let index = 0; index < valArray1.length; index++) {
+                if(valArray1[index].scoreEmail != cliente.emailCliente){
+                    valArray2.push(valArray1[index]);
+                }
+            }
+            // Generamos la valoración nueva
+            valArray2.push(score);
+            for (let index = 0; index < valArray2.length; index++) {
+                promedioVal = promedioVal + valArray2[index].scoreContent;
+            }
+            promedioVal = promedioVal / valArray2.length;
+            producto.valoracionGlobal = promedioVal;
+            producto.valoracionesProducto = valArray2;
+            await producto.save();
+        }
 
         res.json({ msg: "Valoración guardada" });
     } catch (error) {
@@ -379,7 +414,7 @@ const agregarComentario = async (req, res) => {
         return res.status(403).json({msg: error.message});
     }
 
-    // Iniciamos valoración
+    // Iniciamos procesamiento de comentario
     const { nombreProducto,
             comentario} = req.body;
 
@@ -390,24 +425,41 @@ const agregarComentario = async (req, res) => {
         return res.status(403).json({msg: error.message});
     }
 
-    // Revisamos que el cliente no haya valorado antes
-    let usuarios = producto.usersComm;
-    for (let index = 0; index < usuarios.length; index++) {
-        if(cliente.emailCliente = usuarios[index]){
-            const error = new Error("El cliente ya ha valorado este producto"); /* Mensaje faltante */
-            return res.status(403).json({msg: error.message}); 
+    // Revisamos que el cliente no haya comentado antes
+    let comentarios = producto.comentariosProducto;
+    let existencia = false;
+    for (let index = 0; index < comentarios.length; index++) {
+        if(comentarios[index].commentEmail == cliente.emailCliente){
+            existencia = true;
         }
     }
 
     // Realizamos comentario
     try {
         const comment = {
-            commentUsername: nombre,
+            commentEmail: cliente.emailCliente,
+            commentUsername: cliente.usernameCliente,
             commentContent: comentario
-        };
-        producto.comentariosProducto.push(comment);
-        producto.usersComm.push(cliente.emailCliente);
-        await producto.save();
+        }
+        // Adjuntamos valoración si es la primera vez
+        if(existencia == false){
+            producto.comentariosProducto.push(comment);
+            await producto.save();
+        }
+        else{
+            // Eliminamos la valoración previa
+            let commArray1 = producto.comentariosProducto;
+            let commArray2 = [];
+            for (let index = 0; index < commArray1.length; index++) {
+                if(commArray1[index].commentEmail != cliente.emailCliente){
+                    commArray2.push(commArray1[index]);
+                }
+            }
+            // Generamos la valoración nueva
+            commArray2.push(comment);
+            producto.comentariosProducto = commArray2;
+            await producto.save();
+        }
 
         res.json({ msg: "Valoración guardada" });
     } catch (error) {

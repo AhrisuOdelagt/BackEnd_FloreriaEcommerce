@@ -896,6 +896,37 @@ const verDirecciones = async (req, res) => {
     }
 }
 
+const visualizarValoracionComentarios = async (req, res) => {
+    //Realizamos validacion del administrador
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if (!cliente) {
+      const error = new Error("Este usuario no ha iniciado sesión");
+      return res.status(403).json({ msg: error.message });
+    }
+  
+    try {
+      // Buscamos el producto por su ID
+      const productoId = req.params.productoId;
+      const producto = await Producto.findById(productoId);
+  
+      if (!producto) {
+        const error = new Error("No se encontró el producto");
+        return res.status(404).json({ msg: error.message });
+      }
+  
+      // Obtenemos todas las valoraciones y comentarios del producto
+      const valoraciones = producto.valoracionesProducto;
+      const comentarios = producto.comentariosProducto;
+  
+      // Devolvemos las valoraciones y comentarios en la respuesta
+      return res.status(200).json({ valoraciones, comentarios });
+    } catch (error) {
+      return res.status(500).json({ msg: "Error al obtener las valoraciones y comentarios del producto" });
+    }
+}
+
 export { registroCliente,
     autenticacionCliente,
     confirmarCliente,
@@ -920,4 +951,5 @@ export { registroCliente,
     visualizarCarrito,
     verHistorialPedidos,
     verTarjetas,
-    verDirecciones };
+    verDirecciones,
+    visualizarValoracionComentarios};

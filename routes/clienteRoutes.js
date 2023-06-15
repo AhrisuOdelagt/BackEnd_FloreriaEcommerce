@@ -23,7 +23,8 @@ import { registroCliente,
     visualizarCarrito,
     verHistorialPedidos,
     verTarjetas,
-    verDirecciones } from "../controllers/clienteController.js";
+    verDirecciones,
+    visualizarValoracionComentarios} from "../controllers/clienteController.js";
 import checkAuth from "../middleware/checkAuth.js";
 const router = express.Router();
 
@@ -47,6 +48,7 @@ router.post("/interaccionPro/valorar", checkAuth, valorarProducto);
 router.post("/interaccionPro/comentar", checkAuth, agregarComentario);
 router.get("/interaccionPro/verFlores", checkAuth, verFlores);
 router.get("/interaccionPro/verPeluches", checkAuth, verPeluches);
+router.get("/interaccionPro/visualizarValoracionComentarios", checkAuth, visualizarValoracionComentarios);
 // Interacción con carrito
 router.post("/carrito/agregarProducto", checkAuth, agregarProductoCarrito);
 router.post("/carrito/incrementarProducto", checkAuth, incrementarProductoCarrito);

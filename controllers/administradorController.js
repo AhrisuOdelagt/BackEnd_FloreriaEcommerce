@@ -1,4 +1,5 @@
 import Administrador from "../modelos/administrador.js";
+import Pedido from "../modelos/pedidos.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
 import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
@@ -214,6 +215,60 @@ const modificarTelefono = async (req, res) => {
     }
 }
 
+//Registro de Cancelaciones
+const visualizarRegistroCancelaciones = async (req, res) => {
+    //Realizamos validacion del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const administrador = await Administrador.findOne({ emailAdministrador })
+    if (!administrador) {
+      const error = new Error("Ocurrio un error");
+      return res.status(403).json({ msg: error.message });
+    }
+  
+    try {
+      //Buscamos los pedidos cancelados
+      const pedidosCancelados = await Pedido.find({ isCancelled: true });
+  
+      if (pedidosCancelados.length < 1) {
+        const error = new Error("No existen pedidos cancelados");
+        return res.status(404).json({ msg: error.message });
+      }
+  
+      // Mostramos los pedidos cancelados
+      return res.status(200).json(pedidosCancelados);
+    } catch (error) {
+      return res.status(500).json({ msg: "Error al obtener los pedidos cancelados" });
+    }
+}
+
+//Registro de rembolsos
+const visualizarRegistroRembolsos = async (req, res) => {
+    //Realizamos validacion del administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const administrador = await Administrador.findOne({ emailAdministrador })
+    if (!administrador) {
+      const error = new Error("Ocurrio un error");
+      return res.status(403).json({ msg: error.message });
+    }
+  
+    try {
+      // Buscamos los pedidos con reembolso
+      const pedidosReembolsados = await Pedido.find({ isReturned: true });
+  
+      if (pedidosReembolsados.length === 0) {
+        const error = new Error("No existen pedidos con reembolso");
+        return res.status(404).json({ msg: error.message });
+      }
+  
+      // Mostramos los pedidos con reembolso
+      return res.status(200).json(pedidosReembolsados);
+    } catch (error) {
+      return res.status(500).json({ msg: "Error al obtener los pedidos con reembolso" });
+    }
+}
+
 export { registroAdministrador,
     autenticacionAdministrador,
     confirmarAdministrador,
@@ -223,4 +278,6 @@ export { registroAdministrador,
     perfil,
     modificarPassword,
     modificarUsername,
-    modificarTelefono};
+    modificarTelefono,
+    visualizarRegistroCancelaciones,
+    visualizarRegistroRembolsos};

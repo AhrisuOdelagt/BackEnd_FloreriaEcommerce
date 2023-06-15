@@ -8,8 +8,10 @@ import { registroAdministrador,
     perfil,
     modificarPassword,
     modificarUsername,
-    modificarTelefono} from "../controllers/administradorController.js";
-import checkAuth from "../middleware/checkAuth.js"
+    modificarTelefono,
+    visualizarRegistroCancelaciones,
+    visualizarRegistroRembolsos} from "../controllers/administradorController.js";
+import checkAuth from "../middleware/checkAuthAdmin.js"
 const router = express.Router();
 
 // Creación de usuario e inicio de sesión
@@ -25,5 +27,8 @@ router.get("/perfil", checkAuth, perfil);
 router.post("/modificar/password", checkAuth, modificarPassword);
 router.post("/modificar/username", checkAuth, modificarUsername);
 router.post("/modificar/telefono", checkAuth, modificarTelefono);
+//Visualisar Registros
+router.get("/visualizar/RegistroCancelaciones", checkAuth,visualizarRegistroCancelaciones)
+router.get("/visualizar/RegistroRembolsos", checkAuth,visualizarRegistroCancelaciones)
 
 export default router;

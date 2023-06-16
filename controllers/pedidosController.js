@@ -241,7 +241,52 @@ const solicitarReembolso = async (req, res) => {
     }
 }
 
+const mostrarPedidos = async (req, res) => {
+
+    //Autenticamos al administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+    //Obtenemos los Pedidos
+    try {
+        const documentos = await Pedido.find();
+        res.json({ pedidos: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const mostrarPedidosAReembolsar = async (req, res) => {
+
+    //Autenticamos al administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+    //Buscamos unicamente los pedidos en solicitud de reembolso
+    const aRembolsar = {returnReq: "true"};
+    
+    //Obtenemos los pedidos
+    try {
+        const documentos = await Pedido.find(aRembolsar);
+        res.json({ pedidosRem: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+
+}
+
+
 export { generarPedido,
         cancelarPedido,
         pagarPedido,
-        solicitarReembolso }; 
+        solicitarReembolso,
+        mostrarPedidos, 
+        mostrarPedidosARembolsar}; 

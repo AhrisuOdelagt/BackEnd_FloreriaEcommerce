@@ -50,6 +50,11 @@ const autenticacionAdministrador = async (req, res) => {
         const error = new Error("Usuario sin confirmar");  /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
+    // Comprobamos si es un administrador
+    if(!administrador.isAdmin){
+        const error = new Error("No es un administrador.");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
     // Confirmamos la password
     if(await administrador.comprobarPassword(passwordAdministrador)){
         res.json({_id: administrador._id,
@@ -134,10 +139,11 @@ const nuevoPasswordRec = async (req, res) => {
         return res.status(403).json({msg: error.message});
     }
     try {
+        console.log(administrador);
         administrador.passwordAdministrador = nuevaPassword;
         administrador.tokenAdministrador = undefined;
-        administrador.save();
-        res.json({msg: "Cambio guardado exitosamente"})
+        await administrador.save();
+        res.json({msg: "Cambio guardado exitosamente"});
     } catch (error) {
         console.log(error);
     }

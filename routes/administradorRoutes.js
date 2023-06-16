@@ -18,8 +18,9 @@ router.post("/iniSes", autenticacionAdministrador);
 router.get("/confirmar/:tokenAdministrador", confirmarAdministrador);
 // Olvidé contraseña
 router.post("/olvide-password", olvidePassword);
-router.get("/olvide-password/:tokenAdministrador", comprobarToken);
-router.post("/olvide-password/:tokenAdministrador", nuevoPasswordRec);
+//router.get("/olvide-password/:tokenAdministrador", comprobarToken);
+//router.post("/olvide-password/:tokenAdministrador", nuevoPasswordRec);
+router.route("/olvide-password/:tokenAdministrador").get(comprobarToken).post(nuevoPasswordRec);
 router.get("/perfil", checkAuth, perfil);
 // Modificar Datos Personales
 router.post("/modificar/password", checkAuth, modificarPassword);

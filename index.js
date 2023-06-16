@@ -2,11 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import clienteRoutes from "./routes/clienteRoutes.js";
-import temporadaRoutes from "./routes/temporadaRoutes.js";
-import productosRoutes from "./routes/productosRoutes.js";
-import administradorRoutes from "./routes/administradorRoutes.js";
-import pedidosRoutes from "./routes/pedidosRoutes.js";
+import clienteRoutes from "./routes/clienteRoutes.js"
+import temporadaRoutes from "./routes/temporadaRoutes.js"
 
 const app = express();
 app.use(express.json());
@@ -24,10 +21,9 @@ cloudinary.config({
 
 // Enrutamiento
 app.use("/api/cliente", clienteRoutes);
+app.use("/api/producto", productosRoutes);
 app.use("/api/temporada", temporadaRoutes);
-app.use("/api/productos", productosRoutes);
-app.use("/api/administrador", administradorRoutes);
-app.use("/api/pedidos", pedidosRoutes);
+
 
 // Ocultamiento del puerto de conexión
 const PORT = process.env.PORT || 4000;

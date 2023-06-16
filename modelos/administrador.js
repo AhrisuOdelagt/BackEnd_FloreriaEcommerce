@@ -1,6 +1,47 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
+//Parte de la base embebido Direccion
+const direccionSchema = mongoose.Schema({
+    _id : false,
+    /* delegacion: {
+        type: String,
+        trim: true,
+    }, */
+    codigoPostal: {
+        type: String,
+        trim: true,
+    },
+    colonia: {
+        type: String,
+        trim: true,
+    },
+    calle: {
+        type: String,
+        trim: true,
+    },
+    numInt: {
+        type: String,
+        trim: true,
+    },
+    numExt: {
+        type: String,
+        trim: true,
+    },
+    referencia1: {
+        type: String,
+        trim: true,
+    },
+    referencia2: {
+        type: String,
+        trim: true,
+    },
+    indicacionesAd: {
+        type: String,
+        trim: true,
+    }
+});
+
 // Creación del esquema de la colección Administrador -----
 const administradorSchema = mongoose.Schema({
     nombreAdministrador: {

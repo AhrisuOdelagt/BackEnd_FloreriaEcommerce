@@ -316,15 +316,15 @@ const visualizarRegistroCancelaciones = async (req, res) => {
 
     try {
       //Buscamos los pedidos cancelados
-      const pedidosCancelados = await Pedido.find({ isCancelled: true });
+      const documentos = await Pedido.find({ isCancelled: true });
 
-      if (pedidosCancelados.length < 1) {
+      if (documentos.length < 1) {
         const error = new Error("No existen pedidos cancelados");
         return res.status(404).json({ msg: error.message });
       }
 
       // Mostramos los pedidos cancelados
-      return res.status(200).json(pedidosCancelados);
+      return res.status(200).json({ cancelados: documentos });
     } catch (error) {
       return res.status(500).json({ msg: "Error al obtener los pedidos cancelados" });
     }
@@ -343,15 +343,15 @@ const visualizarRegistroRembolsos = async (req, res) => {
 
     try {
       // Buscamos los pedidos con reembolso
-      const pedidosReembolsados = await Pedido.find({ isReturned: true });
+      const documentos = await Pedido.find({ isReturned: true });
 
-      if (pedidosReembolsados.length < 1) {
+      if (documentos.length < 1) {
         const error = new Error("No existen pedidos con reembolso");
         return res.status(404).json({ msg: error.message });
       }
 
       // Mostramos los pedidos con reembolso
-      return res.status(200).json(pedidosReembolsados);
+      return res.status(200).json({ reembolsados: documentos });
     } catch (error) {
       return res.status(500).json({ msg: "Error al obtener los pedidos con reembolso" });
     }

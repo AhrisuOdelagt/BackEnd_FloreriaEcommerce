@@ -1,6 +1,7 @@
 import Pedido from "../modelos/pedidos.js";
 import Cliente from "../modelos/cliente.js";
 import Producto from "../modelos/productos.js";
+import cardValidator from "card-validator";
 
 // Generar pedido
 const generarPedido = async (req, res) => {
@@ -17,6 +18,15 @@ const generarPedido = async (req, res) => {
     if(cliente.carritoCompras.length < 1){
         const error = new Error("Su carrito de compras está vacío"); /* Mensaje faltante */
         return res.status(404).json({msg: error.message});
+    }
+
+    // Verificamos que no se quieran comprar excedentes de inventario
+    const prec = cliente.carritoCompras;
+    for (let index = 0; index < prec.length; index++) {
+        if(prec[index].cantidad_C > prec[index].copiaInv_C){
+            const error = new Error(`Hubo una modificación en el inventario del producto '${prec[index].producto_C}'. Decremente la cantidad a comprar.`); /* Mensaje faltante */
+            return res.status(403).json({msg: error.message});
+        }
     }
 
     // Generamos el pedido
@@ -89,8 +99,9 @@ const cancelarPedido = async (req, res) => {
         }
         cliente.pedidosCliente = newPedidos;
         await cliente.save();
-        // Eliminamos el pedido
-        await pedido.deleteOne();
+        // Cancelamos el pedido
+        pedido.isCancelled = true;
+        await pedido.save();
         res.json({ msg: "Se ha cancelado el pedido" }); /* Mensaje faltante */
     } catch (error) {
         console.log(error);
@@ -140,7 +151,7 @@ const pagarPedido = async (req, res) => {
     }
     
     // Validamos método de pago
-    if(metodoPago != "Tarjeta de débito o crédito" && metodoPago != "Transferencia"){
+    if(metodoPago != "Tarjeta de débito o crédito"){
         const error = new Error("Método de pago inválido"); /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
@@ -154,7 +165,11 @@ const pagarPedido = async (req, res) => {
     /* Hallar modo de validar la fecha de entrega */
 
     // Validamos el número de tarjeta
-    // Pendiente, ver si de verdad vale la pena validar el número de tarjeta
+    const tarjetaValida = cardValidator.number(numTarjeta_P);
+    if(!tarjetaValida.isValid){
+        const error = new Error("Número de tarjeta inválido"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
 
     // Realizamos el pago
     try {
@@ -163,14 +178,17 @@ const pagarPedido = async (req, res) => {
         pedido.metodoEntrega = metodoEntrega;
         pedido.fechaEntrega = fechaEntrega;
         // Verificamos el método de pago
-        if (metodoPago == "Transferencia") {
-            pedido.tarjetaPedido = undefined;
-        } else {
-            const tarjeta = {
+        if (metodoPago == "Tarjeta de débito o crédito") {
+            let tarjeta = {
                 numTarjeta_P: numTarjeta_P,
                 fechaVencimiento_P: fechaVencimiento_P,
                 cvv_P: cvv_P
             };
+            tarjeta = {
+                numTarjeta_P: numTarjeta_P,
+                fechaVencimiento_P: undefined,
+                cvv_P: undefined
+            }
             pedido.tarjetaPedido = tarjeta;
         }
         // Verificamos método de entrega
@@ -218,7 +236,8 @@ const solicitarReembolso = async (req, res) => {
     }
 
     // Verificamos que exista el pedido
-    const { nombrePedido } = req.body;
+    const { nombrePedido,
+            returnMotif } = req.body;
     const pedido = await Pedido.findOne({ nombrePedido });
     if(!pedido){
         const error = new Error("El número de pedido es incorrecto");
@@ -234,6 +253,7 @@ const solicitarReembolso = async (req, res) => {
     // Solicitamos el reembolso
     try {
         pedido.returnReq = true;
+        pedido.returnMotif = returnMotif;
         await pedido.save();
         res.json({ msg: "Se ha solicitado el reembolso" });
     } catch (error) {

@@ -46,3 +46,39 @@ URL:	http://localhost:27017/api/administrador/olvide-password/83142
 Body:	{
     "nuevaPassword": "lunaluna"
 }
+
+
+
+--- Interactuar con pedidos --- 
+(Requieren JWT de administrador)
+
+-- Mostrar Pedidos
+Tipo: GET
+URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidos
+
+
+
+-- Mostrar Pedidos a reembolsar
+Tipo: GET
+URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidosAReembolsar
+
+
+
+-- Mostrar Pedidos Cancelados
+Tipo: GET
+URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidosCancelados
+
+
+
+-- Mostrar pedidos reembolsados
+Tipo: GET
+URL: http://localhost:4000/api/administrador/pedidos/mostrarReembolsos
+
+
+
+-- Autorizar reembolsados
+Tipo: POST
+URL: http://localhost:4000/api/administrador/pedidos/mostrarReembolsos
+JSON: {
+    "nombrePedido": "Oder Franco Olvera_1686614535962"
+}

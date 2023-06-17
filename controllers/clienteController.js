@@ -4,6 +4,7 @@ import Pedido from "../modelos/pedidos.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
 import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
+import cardValidator from "card-validator";
 
 // Registro del cliente en la base de datos
 const registroCliente = async (req, res) => {
@@ -294,6 +295,12 @@ const modificarTarjeta = async (req, res) => {
         const error = new Error("Ocurrió un error.");
         return res.status(403).json({msg: error.message});
     }
+    // Validamos el número de tarjeta
+    const tarjetaValida = cardValidator.number(num);
+    if(!tarjetaValida.isValid){
+        const error = new Error("Número de tarjeta inválido"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
     // Realizamos la operación
     try {
         const direccion = {
@@ -510,6 +517,95 @@ const verPeluches = async (req, res) => {
         res.json({ plushies: documentos });
     } catch (error) {
         console.log(error);
+    }
+}
+
+// Añadir a favoritos
+const agregarFavoritos = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Añadimos a favoritos
+    try {
+        cliente.favoritos.push(producto.nombreProducto);
+        await cliente.save();
+        res.json({ msg: "Producto agregado a favoritos" });  /* Mensaje faltante */
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Ver favoritos
+const verFavoritos = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos favoritos del cliente
+    try {
+        // Obtener los IDs de los productos favoritos
+        const favoritosIds = cliente.favoritos;
+        const documentos = [];
+        // Buscar los productos favoritos en la base de datos
+        for (let index = 0; index < favoritosIds.length; index++) {
+            let nombreProducto = favoritosIds[index];
+            const producto = await Producto.findOne({ nombreProducto });
+            documentos.push(producto);
+        }
+        
+        res.json({ favoritos: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const visualizarValoracionComentarios = async (req, res) => {
+    //Realizamos validacion del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if (!cliente) {
+      const error = new Error("Este usuario no ha iniciado sesión");
+      return res.status(403).json({ msg: error.message });
+    }
+
+    // Buscamos el producto
+    const { nombreProducto } = req.body;
+    const producto = await Producto.findOne({ nombreProducto });
+    if (!producto) {
+      const error = new Error("No se encontró el producto");
+      return res.status(404).json({ msg: error.message });
+    }
+
+    try {
+      // Obtenemos todas las valoraciones y comentarios del producto
+      const valoracion = producto.valoracionGlobal;
+      const comentarios = producto.comentariosProducto;
+
+      // Devolvemos las valoraciones y comentarios en la respuesta
+      return res.status(200).json({ valoracion, comentarios });
+    } catch (error) {
+      return res.status(500).json({ msg: "Error al obtener las valoraciones y comentarios del producto" });
     }
 }
 
@@ -912,6 +1008,9 @@ export { registroCliente,
     agregarComentario,
     verPeluches,
     verFlores,
+    agregarFavoritos,
+	verFavoritos,
+	visualizarValoracionComentarios,
     agregarProductoCarrito,
     incrementarProductoCarrito,
     decrementarProductoCarrito,

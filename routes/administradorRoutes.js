@@ -8,8 +8,13 @@ import { registroAdministrador,
     perfil,
     modificarPassword,
     modificarUsername,
-    modificarTelefono} from "../controllers/administradorController.js";
-import checkAuth from "../middleware/checkAuth.js"
+    modificarTelefono,
+    mostrarPedidos,
+	mostrarPedidosAReembolsar,
+	autorizarReembolso,
+	visualizarRegistroCancelaciones,
+	visualizarRegistroRembolsos} from "../controllers/administradorController.js";
+import checkAuthAdmin from "../middleware/checkAuthAdmin.js"
 const router = express.Router();
 
 // Creación de usuario e inicio de sesión
@@ -20,10 +25,16 @@ router.get("/confirmar/:tokenAdministrador", confirmarAdministrador);
 router.post("/olvide-password", olvidePassword);
 router.get("/olvide-password/:tokenAdministrador", comprobarToken);
 router.post("/olvide-password/:tokenAdministrador", nuevoPasswordRec);
-router.get("/perfil", checkAuth, perfil);
+router.get("/perfil", checkAuthAdmin, perfil);
 // Modificar Datos Personales
-router.post("/modificar/password", checkAuth, modificarPassword);
-router.post("/modificar/username", checkAuth, modificarUsername);
-router.post("/modificar/telefono", checkAuth, modificarTelefono);
+router.post("/modificar/password", checkAuthAdmin, modificarPassword);
+router.post("/modificar/username", checkAuthAdmin, modificarUsername);
+router.post("/modificar/telefono", checkAuthAdmin, modificarTelefono);
+// Funciones de pedidos
+router.get("/pedidos/mostrarPedidos", checkAuthAdmin, mostrarPedidos);  // Revisado
+router.get("/pedidos/mostrarPedidosAReembolsar", checkAuthAdmin, mostrarPedidosAReembolsar);    // Revisado
+router.get("/pedidos/mostrarPedidosCancelados", checkAuthAdmin, visualizarRegistroCancelaciones);  // Revisado
+router.get("/pedidos/mostrarReembolsos", checkAuthAdmin, visualizarRegistroRembolsos);  // Revisado
+router.post("/pedidos/autorizarReembolso", checkAuthAdmin, autorizarReembolso);  // Revisado
 
 export default router;

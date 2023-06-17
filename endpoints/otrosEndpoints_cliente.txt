@@ -35,3 +35,33 @@ URL:	http://localhost:4000/api/cliente/interaccionPro/verFlores
 -- Ver Peluches
 Tipo: GET
 URL:	http://localhost:4000/api/cliente/interaccionPro/verPeluches
+
+
+
+--- Favoritos ---
+(Requieren autenticación (JWT) del cliente)
+
+-- Agregar Favoritos
+Tipo: POST
+URL:    http://localhost:4000/api/cliente/interaccionPro/agregarFavoritos
+JSON: {
+    "nombreProducto": "Rosa roja"
+}
+
+
+
+-- Ver Favoritos
+Tipo: GET
+URL:    http://localhost:4000/api/cliente/interaccionPro/verFavoritos
+
+
+
+--- Visualizar valoraciones ---
+(Requieren autenticación (JWT) del cliente)
+
+-- Visualizar valoraciones & comentarios
+Tipo: POST
+URL:    http://localhost:4000/api/cliente/interaccionPro/visualizarVC
+JSON: {
+    "nombreProducto": "Pingüino2"
+}

@@ -17,12 +17,12 @@ const temporadasSchema = mongoose.Schema({
         trim: true,
         required: true,
     },
-    fechaInicio: {
-        type: String,
+    fecInit: {
+        type: Date,
         trim: true
     },
-    fechaFin: {
-        type: String,
+    fecEnd: {
+        type: Date,
         trim: true
     }
 });

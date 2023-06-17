@@ -15,6 +15,9 @@ import { registroCliente,
     agregarComentario,
     verPeluches,
     verFlores,
+    agregarFavoritos,
+	verFavoritos,
+	visualizarValoracionComentarios,
     agregarProductoCarrito,
     incrementarProductoCarrito,
     decrementarProductoCarrito,
@@ -47,6 +50,9 @@ router.post("/interaccionPro/valorar", checkAuth, valorarProducto);
 router.post("/interaccionPro/comentar", checkAuth, agregarComentario);
 router.get("/interaccionPro/verFlores", checkAuth, verFlores);
 router.get("/interaccionPro/verPeluches", checkAuth, verPeluches);
+router.post("/interaccionPro/agregarFavoritos", checkAuth, agregarFavoritos);   // Revisado
+router.get("/interaccionPro/verFavoritos", checkAuth, verFavoritos);    // Revisado
+router.post("/interaccionPro/visualizarVC", checkAuth, visualizarValoracionComentarios);    // Revisado
 // Interacción con carrito
 router.post("/carrito/agregarProducto", checkAuth, agregarProductoCarrito);
 router.post("/carrito/incrementarProducto", checkAuth, incrementarProductoCarrito);

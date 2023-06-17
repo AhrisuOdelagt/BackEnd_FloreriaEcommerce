@@ -48,8 +48,9 @@ Body:	{
 Tipo:   POST
 URL:	http://localhost:4000/api/cliente/modificar/tarjeta
 Body:	{
-    "num": "1234567891234567",
+    "num": "4111111111111111",
     "fecha": "0525",
     "c": "127",
     "titular": "14"
 }
+(Este endpoint valida que el número de tarjeta sea válido. El número del ejemplo es válido)

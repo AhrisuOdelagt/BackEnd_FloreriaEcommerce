@@ -134,6 +134,10 @@ const clienteSchema = mongoose.Schema({
     carritoCompras: {
         type: [carritoComprasSchema],
     },
+    favoritos: {
+        type: [String],
+        trim: true,
+    },
     tokenCliente: {
         type: String,
     }

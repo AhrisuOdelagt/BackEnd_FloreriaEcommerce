@@ -50,7 +50,7 @@ const destinoSchema = mongoose.Schema({
     }
 });
 
-// Creación dle esquema del documento embebido Tarjeta de Pago
+// Creación del esquema del documento embebido Tarjeta de Pago
 const tarjetaPagoSchema = mongoose.Schema({
     _id : false,
     numTarjeta_P: {
@@ -74,17 +74,17 @@ const pedidosSchema = mongoose.Schema({
         trim: true,
     },
     fechaPedido: {
-        type: String,
+        type: Date,
         trim: true,
         default: () => new Date().toString(),
     },
     fechaEntrega: {
-        type: String,
+        type: Date,
         trim: true,
         default: () => {
             const currentDate = new Date();
             currentDate.setDate(currentDate.getDate() + 4);
-            return currentDate.toString();
+            return currentDate;
           },
     },
     totalArticulos: {
@@ -136,6 +136,10 @@ const pedidosSchema = mongoose.Schema({
         type: Boolean,
         trim: true,
         default: false,
+    },
+    returnMotif: {
+        type: String,
+        trim: true,
     },
     isReturned: {
         type: Boolean,

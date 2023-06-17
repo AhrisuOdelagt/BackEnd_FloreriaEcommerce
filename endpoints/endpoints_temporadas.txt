@@ -5,11 +5,15 @@
 Tipo: POST
 URL:	http://localhost:4000/api/temporada
 json:	{
-    "nombreTemporada": "Invierno",
-    "peluches": "Oso Cariñoso",
-    "flores": "Girasol de Europa del Este",
-    "descrTemporada": "Hace frío",
-    "descuentoTemporada": 25
+    "nombreTemporada": "Verano",
+    "peluches": ["Pingüino2",
+    "Oso Cariñoso"],
+    "flores": ["Rosa roja",
+    "Girasol de Europa del Este"],
+    "descrTemporada": "Para un verano caluroso",
+    "descuentoTemporada": 15,
+    "fecInit": "2023/06/1",
+    "fecEnd": "2023/06/30"
 }
 
 
@@ -18,10 +22,14 @@ json:	{
 Tipo: POST
 URL:	http://localhost:4000/api/temporada/modificarTemporada
 json:	{
-    "nombreTemporada": "Invierno",
-    "newName": "Invierno",
-    "descrTemporada": "Hace mucho frío en el invierno",
-    "descuentoTemporada": 45
+    "nombreTemporada": "Verano",
+    "newName": "Verano",
+    "flores": ["Girasol de Europa del Este"],
+    "peluches": ["Oso Cariñoso"],
+    "descrTemporada": "Hace muy poco frío en el invierno",
+    "descuentoTemporada": 44,
+    "fecInit": "2023/06/1",
+    "fecEnd": "2023/06/30"
 }
 
 

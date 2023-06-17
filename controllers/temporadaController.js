@@ -19,37 +19,54 @@ const registroTemporada = async (req, res) => {
             peluches,
             flores,
             descrTemporada,
-            descuentoTemporada } = req.body;
+            descuentoTemporada,
+            fecInit,
+            fecEnd } = req.body;
     const existeTemporada = await Temporada.findOne({ nombreTemporada });
 
     // Validamos que la temporada no exista
     if(existeTemporada){
-        const error = new Error("La temporada ya esta registrada");
+        const error = new Error("La temporada ya está registrada");
         return res.status(400).json({ msg: error.message });
     }
 
-    // Revisamos que ambos productos existan y tengan la categoría correcta
-    let nombreProducto = peluches;
-    const producto1 = await Producto.findOne({ nombreProducto });
-    if(!producto1){
-        const error = new Error("El producto no existe");
-        return res.status(404).json({ msg: error.message });
-    }
-    if(producto1.tipoProducto != "Peluche"){
-        const error = new Error("El tipo de producto no coincide");
+    // Validamos que los arreglos no estén vacíos
+    if(peluches.length < 1 || flores.length < 1){
+        const error = new Error("No hay productos suficientes"); /* Mensaje sin ver */
         return res.status(400).json({ msg: error.message });
     }
 
-    nombreProducto = flores;
-    const producto2 = await Producto.findOne({ nombreProducto });
-    if(!producto2){
-        const error = new Error("El producto no existe");
-        return res.status(404).json({ msg: error.message });
+    // Revisamos que todos los productos existan y tengan la categoría correcta
+    let nombreProducto;
+    let productosMod = [];
+    for (let index = 0; index < peluches.length; index++) {
+        nombreProducto = peluches[index];
+        productosMod.push(nombreProducto);
+        const producto1 = await Producto.findOne({ nombreProducto });
+        if(!producto1){
+            const error = new Error("El producto no existe");
+            return res.status(404).json({ msg: error.message });
+        }
+        if(producto1.tipoProducto != "Peluche"){
+            const error = new Error("El tipo de producto no coincide");
+            return res.status(400).json({ msg: error.message });
+        }
     }
-    if(producto2.tipoProducto != "Flor"){
-        const error = new Error("El tipo de producto no coincide");
-        return res.status(400).json({ msg: error.message });
+    
+    for (let index = 0; index < flores.length; index++) {
+        nombreProducto = flores[index];
+        productosMod.push(nombreProducto);
+        const producto2 = await Producto.findOne({ nombreProducto });
+        if(!producto2){
+            const error = new Error("El producto no existe");
+            return res.status(404).json({ msg: error.message });
+        }
+        if(producto2.tipoProducto != "Flor"){
+            const error = new Error("El tipo de producto no coincide");
+            return res.status(400).json({ msg: error.message });
+        }
     }
+    
 
     // Validamos que el descuento no sea mayor a 100% ni menor a 0%
     if(descuentoTemporada < 0 && descuentoTemporada > 100){
@@ -59,51 +76,54 @@ const registroTemporada = async (req, res) => {
 
     try {
         // Guardamos la nueva temporada
-        const temporada = new Temporada({nombreTemporada, descrTemporada, descuentoTemporada});
+        const temporada = new Temporada({nombreTemporada, descrTemporada, descuentoTemporada, fecInit, fecEnd});
         await temporada.save();
 
         // Modificamos productos
-        producto1.descuentoProducto = descuentoTemporada;
-        producto1.precioDescuento = producto1.precioProducto - (producto1.descuentoProducto * producto1.precioProducto)/100;
-        producto2.descuentoProducto = descuentoTemporada;
-        producto2.precioDescuento = producto2.precioProducto - (producto2.descuentoProducto * producto2.precioProducto)/100;        
-        // Añadimos las temporadas a los productos
-        producto1.temporadaProducto.push(temporada._id);
-        producto2.temporadaProducto.push(temporada._id);
-        
-        await producto1.save();
-        await producto2.save();
+        for (let index = 0; index < productosMod.length; index++) {
+            nombreProducto = productosMod[index];
+            const producto3 = await Producto.findOne({ nombreProducto });
+            // Verificamos qué descuento se elige para el producto
+            producto3.temporadaProducto.push(temporada._id);
+            const seasons = producto3.temporadaProducto;
+            // Obtenemos la fecha actual
+            let date = new Date();
+            const currentTime = date.valueOf();
+            for (let i = 0; i < seasons.length; i++) {
+                // Encontramos la temporada por su id
+                let id = seasons[i];
+                const temp = await Temporada.findById(id);
+                // Definimos fecha de inicio
+                date = temp.fecInit;
+                const init = date.valueOf();
+                // Definimos fecha de término
+                date = temp.fecEnd;
+                const end = date.valueOf();
+                if(currentTime > init && currentTime < end){
+                    producto3.descuentoProducto = temp.descuentoTemporada;
+                    producto3.precioDescuento = producto3.precioProducto - (producto3.descuentoProducto * producto3.precioProducto)/100;
+                    break;
+                }
+            }
+            await producto3.save();
+        }
 
         // Verificamos que no existan modificaciones en carritos de compras (para ambos productos)
-        // Producto 1
-        let nombreProducto = producto1.nombreProducto;
-        let clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
-        for (let i = 0; i < clientes.length; i++) {
-            let emailCliente = clientes[i].emailCliente;
-            const clienteAModificar = await Cliente.findOne({ emailCliente });
-            console.log(clienteAModificar);
-            let compras = clienteAModificar.carritoCompras;
-            for (let j = 0; j < compras.length; j++) {
-                if(compras[j].producto_C == nombreProducto){
-                    compras[j].totalParcial_C = producto1.precioDescuento;
+        for (let index = 0; index < productosMod.length; index++) {
+            nombreProducto = productosMod[index];
+            const producto3 = await Producto.findOne({ nombreProducto });
+            let clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
+            for (let i = 0; i < clientes.length; i++) {
+                let emailCliente = clientes[i].emailCliente;
+                const clienteAModificar = await Cliente.findOne({ emailCliente });
+                let compras = clienteAModificar.carritoCompras;
+                for (let j = 0; j < compras.length; j++) {
+                    if(compras[j].producto_C == nombreProducto){
+                        compras[j].totalParcial_C = producto3.precioDescuento * compras[j].cantidad_C;
+                    }
                 }
+                await clienteAModificar.save();
             }
-            await clienteAModificar.save();
-        }
-        // Producto 2
-        nombreProducto = producto2.nombreProducto;
-        clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
-        for (let i = 0; i < clientes.length; i++) {
-            let emailCliente = clientes[i].emailCliente;
-            const clienteAModificar = await Cliente.findOne({ emailCliente });
-            console.log(clienteAModificar);
-            let compras = clienteAModificar.carritoCompras;
-            for (let j = 0; j < compras.length; j++) {
-                if(compras[j].producto_C == nombreProducto){
-                    compras[j].totalParcial_C = producto2.precioDescuento;
-                }
-            }
-            await clienteAModificar.save();
         }
 
         res.json({
@@ -126,8 +146,12 @@ const modificarTemporada = async (req, res) => {
 
     let { nombreTemporada,
             newName,
+            flores,
+            peluches,
             descrTemporada,
-            descuentoTemporada } = req.body;
+            descuentoTemporada,
+            fecInit,
+            fecEnd } = req.body;
     const temporadaAModificar = await Temporada.findOne({ nombreTemporada });
 
     // Validamos si existe la temporada
@@ -146,6 +170,40 @@ const modificarTemporada = async (req, res) => {
         }
     }
 
+    // Verificamos si los productos son o no peluches o flores
+    let nombreProducto;
+    let productosMod = [];
+    if(peluches.length > 0){
+        for (let index = 0; index < peluches.length; index++) {
+            nombreProducto = peluches[index];
+            productosMod.push(nombreProducto);
+            const producto1 = await Producto.findOne({ nombreProducto });
+            if(!producto1){
+                const error = new Error("El producto no existe");
+                return res.status(404).json({ msg: error.message });
+            }
+            if(producto1.tipoProducto != "Peluche"){
+                const error = new Error("El tipo de producto no coincide");
+                return res.status(400).json({ msg: error.message });
+            }
+        }
+    }
+    if(flores.length > 0){
+        for (let index = 0; index < flores.length; index++) {
+            nombreProducto = flores[index];
+            productosMod.push(nombreProducto);
+            const producto2 = await Producto.findOne({ nombreProducto });
+            if(!producto2){
+                const error = new Error("El producto no existe");
+                return res.status(404).json({ msg: error.message });
+            }
+            if(producto2.tipoProducto != "Flor"){
+                const error = new Error("El tipo de producto no coincide");
+                return res.status(400).json({ msg: error.message });
+            }
+        }
+    }
+
     // Validamos que el descuento no sea mayor a 100% ni menor a 0%
     if(descuentoTemporada < 0 && descuentoTemporada > 100){
         const error = new Error("Descuento inválido");  /* Mensaje faltante */
@@ -157,18 +215,70 @@ const modificarTemporada = async (req, res) => {
         // Actualizaciones sencillas
         temporadaAModificar.nombreTemporada = nombreTemporada;
         temporadaAModificar.descrTemporada = descrTemporada;
+        temporadaAModificar.fecInit = fecInit;
+        temporadaAModificar.fecEnd = fecEnd;
         // Actualizaciones complejas
         temporadaAModificar.descuentoTemporada = descuentoTemporada;
+        await temporadaAModificar.save();
+        // Agregamos temporada a los productos
+        for (let index = 0; index < productosMod.length; index++) {
+            nombreProducto = productosMod[index];
+            const producto3 = await Producto.findOne({ nombreProducto });
+            // Verificamos qué descuento se elige para el producto
+            const seasons = producto3.temporadaProducto;
+            let flag0 = false;
+            for (let x = 0; x < seasons.length; x++) {
+                if(seasons[x].equals(temporadaAModificar._id)){
+                    flag0 = true;
+                }
+            }
+            if(flag0 == false){
+                producto3.temporadaProducto.push(temporadaAModificar._id);
+            }
+            await producto3.save();
+        }
+        // Hallamos y modificamos los productos que ya tienen la temporada
         const id = temporadaAModificar._id;
         const productos = await Producto.find({ "temporadaProducto": id });
         for (let index = 0; index < productos.length; index++) {
             const producto = await Producto.findOne({ _id: productos[index] });
-            producto.descuentoProducto = temporadaAModificar.descuentoTemporada;
-            producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
+            // Reinicio del descuento
+            if(producto.temporadaProducto.length < 1){
+                producto.descuentoProducto = 0;
+                producto.precioDescuento = producto.precioProducto;
+            }
+            else{
+                let flag = false;
+                const seasons = producto.temporadaProducto;
+                // Obtenemos la fecha actual
+                let date = new Date();
+                const currentTime = date.valueOf();
+                for (let k = 0; k < seasons.length; k++) {
+                    // Encontramos la temporada por su id
+                    let id = seasons[k];
+                    const temp = await Temporada.findById(id);
+                    // Definimos fecha de inicio
+                    date = temp.fecInit;
+                    const init = date.valueOf();
+                    // Definimos fecha de término
+                    date = temp.fecEnd;
+                    const end = date.valueOf();
+                    if(currentTime > init && currentTime < end){
+                        producto.descuentoProducto = temp.descuentoTemporada;
+                        producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
+                        flag = true
+                        break;
+                    }
+                    if(flag == false){
+                        producto.descuentoProducto = 0;
+                        producto.precioDescuento = producto.precioProducto;
+                    }
+                }
+            }
             await producto.save();
 
             // Actualizamos los precios del producto en cualquier carrito de compras
-            let nombreProducto = producto.nombreProducto;
+            nombreProducto = producto.nombreProducto;
             const clientes = await Cliente.find({ 'carritoCompras.producto_C': nombreProducto });
             for (let i = 0; i < clientes.length; i++) {
                 let emailCliente = clientes[i].emailCliente;
@@ -177,13 +287,13 @@ const modificarTemporada = async (req, res) => {
                 let compras = clienteAModificar.carritoCompras;
                 for (let j = 0; j < compras.length; j++) {
                     if(compras[j].producto_C == nombreProducto){
-                        compras[j].totalParcial_C = producto.precioDescuento;
+                        compras[j].totalParcial_C = producto.precioDescuento * compras[j].cantidad_C;
                     }
                 }
                 await clienteAModificar.save();
             }
         }
-        await temporadaAModificar.save();
+        // await temporadaAModificar.save();
         res.json({msg: "Se ha modificado la temporada"});  /* Mensaje faltante */
     } catch (error) {
         console.log(error);
@@ -245,9 +355,6 @@ const eliminarTemporada = async (req, res) => {
         let temp = [];
         for (let index = 0; index < productos.length; index++) {
             const producto = await Producto.findOne({ _id: productos[index] });
-            // Reinicio del descuento
-            producto.descuentoProducto = 0;
-            producto.precioDescuento = producto.precioProducto;
             // Removemos la temporada del arreglo
             temp = producto.temporadaProducto;
             let newTemp = []
@@ -259,6 +366,39 @@ const eliminarTemporada = async (req, res) => {
                 // console.log(temp[i]);
             }
             producto.temporadaProducto = newTemp;
+            // Reinicio del descuento
+            if(producto.temporadaProducto.length < 1){
+                producto.descuentoProducto = 0;
+                producto.precioDescuento = producto.precioProducto;
+            }
+            else{
+                let flag = false;
+                const seasons = producto.temporadaProducto;
+                // Obtenemos la fecha actual
+                let date = new Date();
+                const currentTime = date.valueOf();
+                for (let k = 0; k < seasons.length; k++) {
+                    // Encontramos la temporada por su id
+                    let id = seasons[k];
+                    const temp = await Temporada.findById(id);
+                    // Definimos fecha de inicio
+                    date = temp.fecInit;
+                    const init = date.valueOf();
+                    // Definimos fecha de término
+                    date = temp.fecEnd;
+                    const end = date.valueOf();
+                    if(currentTime > init && currentTime < end){
+                        producto.descuentoProducto = temp.descuentoTemporada;
+                        producto.precioDescuento = producto.precioProducto - (producto.descuentoProducto * producto.precioProducto)/100;
+                        flag = true
+                        break;
+                    }
+                    if(flag == false){
+                        producto.descuentoProducto = 0;
+                        producto.precioDescuento = producto.precioProducto;
+                    }
+                }
+            }
             await producto.save();
             
             // Actualizamos los precios del producto en cualquier carrito de compras
@@ -267,11 +407,10 @@ const eliminarTemporada = async (req, res) => {
             for (let i = 0; i < clientes.length; i++) {
                 let emailCliente = clientes[i].emailCliente;
                 const clienteAModificar = await Cliente.findOne({ emailCliente });
-                console.log(clienteAModificar);
                 let compras = clienteAModificar.carritoCompras;
                 for (let j = 0; j < compras.length; j++) {
                     if(compras[j].producto_C == nombreProducto){
-                        compras[j].totalParcial_C = producto.precioDescuento;
+                        compras[j].totalParcial_C = producto.precioDescuento * compras[j].cantidad_C;
                     }
                 }
                 await clienteAModificar.save();

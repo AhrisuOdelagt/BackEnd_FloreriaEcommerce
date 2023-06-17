@@ -20,21 +20,21 @@ Body:	{
 Tipo: POST
 URL:	http://localhost:4000/api/pedidos/pagarPedido
 Body:	{
-    "nombrePedido": "Oder Franco Olvera_1686614535962",
-    "metodoPago": "Transferencia",
+    "nombrePedido": "Oder Franco Olvera_1686975219850",
+    "metodoPago": "Tarjeta de débito o crédito",
     "metodoEntrega": "Recoger en Tienda",
     "fechaEntrega": "Thu Jun 15 2023 20:54:03 GMT-0600 (hora estándar central)",
     "tarjetaPedido": {
-        "numTarjeta_Ped": "",
-        "fechaVencimiento_Ped": "",
-        "cvv_Ped": ""
+        "numTarjeta_P": "4111111111111111",
+        "fechaVencimiento_P": "453",
+        "cvv_P": "201"
     },
     "destinoPedido": {
-        "codigoPostal_Ped": "",
-        "colonia_Ped": "",
-        "calle_Ped": "",
-        "numInt_Ped": "",
-        "numExt_Ped": ""
+        "codigoPostal_P": "",
+        "colonia_P": "",
+        "calle_P": "",
+        "numInt_P": "",
+        "numExt_P": ""
     }
 }
 
@@ -46,5 +46,6 @@ Body:	{
 -- Solicitar reembolso
 URL:	http://localhost:4000/api/pedidos/solicitarReembolso
 Body:	{
-    "nombrePedido": "Oder Franco Olvera_1686547318150"
+    "nombrePedido": "Oder Franco Olvera_1686614535962",
+    "returnMotif": "Salió feo."
 }

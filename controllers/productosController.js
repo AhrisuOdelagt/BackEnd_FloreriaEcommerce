@@ -272,7 +272,7 @@ const modificarProducto = async (req, res) => {
             for (let j = 0; j < compras.length; j++) {
                 if(compras[j].producto_C == oldName){
                     compras[j].producto_C = productoAModificar.nombreProducto; 
-                    compras[j].totalParcial_C = productoAModificar.precioDescuento; 
+                    compras[j].totalParcial_C = productoAModificar.precioDescuento * compras[j].cantidad_C; 
                     compras[j].copiaInv_C = productoAModificar.cantidadInv; 
                 }
             }

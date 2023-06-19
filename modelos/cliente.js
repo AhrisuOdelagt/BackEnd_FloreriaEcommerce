@@ -81,8 +81,35 @@ const carritoComprasSchema = mongoose.Schema({
     copiaInv_C: {
         type: Number,
         trim: true
+    },
+    img_C: {
+        type: String,
+        trim: true
     }
 });
+
+// Creación del esquema del documento embebido Favoritos
+const favoritosSchema = mongoose.Schema({
+    _id : false,
+    idFav: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Producto", /* Referencia del producto favorito del cliente */
+        trim: true, 
+    },
+    productoFav: {
+        type: String,
+        trim: true,
+    },
+    descrFav: {
+        type: String,
+        trim: true,
+    },
+    imgFav: {
+        type: String,
+        trim: true,
+    }
+});
+
 
 // Creación del esquema de la colección Cliente -----
 const clienteSchema = mongoose.Schema({
@@ -135,7 +162,7 @@ const clienteSchema = mongoose.Schema({
         type: [carritoComprasSchema],
     },
     favoritos: {
-        type: [String],
+        type: [favoritosSchema],
         trim: true,
     },
     tokenCliente: {

@@ -14,11 +14,11 @@ const detallesSchema = mongoose.Schema({
     totalParcial_P: {
         type: Number,
         trim: true,
-    }/*,
-    copiaInv_P: {
-        type: Number,
-        trim: true
-    }*/
+    },
+    img_P: {
+        type: String,
+        trim: true,
+    }
 });
 
 // Creación del esquema del documento embebido Destino
@@ -73,10 +73,15 @@ const pedidosSchema = mongoose.Schema({
         type: String,
         trim: true,
     },
+    clientePedido:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Cliente", /* Referencia del cliente que hizo el pedido */
+        trim: true, 
+    },
     fechaPedido: {
         type: Date,
         trim: true,
-        default: () => new Date().toString(),
+        default: () => new Date(),
     },
     fechaEntrega: {
         type: Date,
@@ -86,6 +91,10 @@ const pedidosSchema = mongoose.Schema({
             currentDate.setDate(currentDate.getDate() + 4);
             return currentDate;
           },
+    },
+    fechaCancelacion: {
+        type: Date,
+        trim: true,
     },
     totalArticulos: {
         type: Number,
@@ -112,16 +121,18 @@ const pedidosSchema = mongoose.Schema({
         trim: true,
         default: true,
     },
-    isDeployed: {
-        type: Boolean,
-        trim: true,
-        default: false,
-    },
     isFinished: {
         type: Boolean,
         trim: true,
         default: false,
     },
+    // Estatus de la entrega
+    deliverStatus: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+    // -----
     isPaid: {
         type: Boolean,
         trim: true,
@@ -132,19 +143,16 @@ const pedidosSchema = mongoose.Schema({
         trim: true,
         default: false,
     },
-    returnReq: {
-        type: Boolean,
+    // Estatus de la devolución
+    returnStatus: {
+        type: String,
         trim: true,
-        default: false,
+        default: "",
     },
+    // -----
     returnMotif: {
         type: String,
         trim: true,
-    },
-    isReturned: {
-        type: Boolean,
-        trim: true,
-        default: false,
     },
     metodoPago: {
         type: String,

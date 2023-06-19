@@ -263,7 +263,7 @@ const modificarProducto = async (req, res) => {
 
         // Revisamos que no haya cambios en algún carrito de compras
         // Especificamos que sólo se buscan carritos cuyo contenido incluya algún producto con el viejo nombre
-        const clientes = await Cliente.find({ 'carritoCompras.producto_C': oldName });
+        let clientes = await Cliente.find({ 'carritoCompras.producto_C': oldName });
         // console.log(clientes);
         for (let i = 0; i < clientes.length; i++) {
             let emailCliente = clientes[i].emailCliente;
@@ -273,7 +273,23 @@ const modificarProducto = async (req, res) => {
                 if(compras[j].producto_C == oldName){
                     compras[j].producto_C = productoAModificar.nombreProducto; 
                     compras[j].totalParcial_C = productoAModificar.precioDescuento * compras[j].cantidad_C; 
-                    compras[j].copiaInv_C = productoAModificar.cantidadInv; 
+                    compras[j].copiaInv_C = productoAModificar.cantidadInv;
+                    compras[j].img_C = productoAModificar.imagenProducto[0];
+                }
+            }
+            await clienteAModificar.save();
+        }
+        // Revisamos que no haya cambios en favoritos
+        clientes = await Cliente.find({ 'favoritos.productoFav': oldName });
+        for (let i = 0; i < clientes.length; i++) {
+            let emailCliente = clientes[i].emailCliente;
+            const clienteAModificar = await Cliente.findOne({ emailCliente });
+            let favoritos = clienteAModificar.favoritos;
+            for (let j = 0; j < favoritos.length; j++) {
+                if(favoritos[j].productoFav == oldName){
+                    favoritos[j].productoFav = productoAModificar.nombreProducto; 
+                    favoritos[j].descrFav = productoAModificar.descrProducto;
+                    favoritos[j].imgFav = productoAModificar.imagenProducto[0];
                 }
             }
             await clienteAModificar.save();

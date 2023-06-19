@@ -58,7 +58,7 @@ URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidos
 
 
 
--- Mostrar Pedidos a reembolsar
+-- Mostrar Pedidos con solicitud de devolución
 Tipo: GET
 URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidosAReembolsar
 
@@ -70,15 +70,26 @@ URL: http://localhost:4000/api/administrador/pedidos/mostrarPedidosCancelados
 
 
 
--- Mostrar pedidos reembolsados
+-- Mostrar pedidos devueltos (autorizados o no)
 Tipo: GET
 URL: http://localhost:4000/api/administrador/pedidos/mostrarReembolsos
 
 
 
--- Autorizar reembolsados
+-- Autorizar devoluciones
 Tipo: POST
-URL: http://localhost:4000/api/administrador/pedidos/mostrarReembolsos
+URL: http://localhost:4000/api/administrador/pedidos/autorizarReembolso
 JSON: {
-    "nombrePedido": "Oder Franco Olvera_1686614535962"
+    "nombrePedido": "Oder Franco Olvera_1687193691033",
+    "status": "Rechazada"
+}
+
+
+
+-- Modificar estado del pedido
+Tipo: POST
+URL: http://localhost:4000/api/administrador/pedidos/modificarEstado
+JSON: {
+    "nombrePedido": "Oder Franco Olvera_1687193691033",
+    "status": "En camino"
 }

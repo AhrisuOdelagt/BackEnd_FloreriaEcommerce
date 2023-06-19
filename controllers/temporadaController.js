@@ -163,7 +163,7 @@ const modificarTemporada = async (req, res) => {
     // Verificar que no haya conflictos al nombrar
     if(nombreTemporada != newName){
         nombreTemporada = newName;
-        const existeTemporada = Temporada.findOne({ nombreTemporada });
+        const existeTemporada = await Temporada.findOne({ nombreTemporada });
         if(existeTemporada){
             const error = new Error("Esta temporada ya existe"); /* Mensaje faltante */
             return res.status(403).json({msg: error.message});
@@ -286,7 +286,7 @@ const modificarTemporada = async (req, res) => {
                 console.log(clienteAModificar);
                 let compras = clienteAModificar.carritoCompras;
                 for (let j = 0; j < compras.length; j++) {
-                    if(compras[j].producto_C == nombreProducto){
+                    if(compras[j].producto_C == producto.nombreProducto){
                         compras[j].totalParcial_C = producto.precioDescuento * compras[j].cantidad_C;
                     }
                 }

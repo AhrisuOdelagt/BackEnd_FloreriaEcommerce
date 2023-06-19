@@ -542,7 +542,13 @@ const agregarFavoritos = async (req, res) => {
 
     // Añadimos a favoritos
     try {
-        cliente.favoritos.push(producto.nombreProducto);
+        const favorito = {
+            idFav: producto._id,
+            productoFav: producto.nombreProducto,
+            descrFav: producto.descrProducto,
+            imgFav: producto.imagenProducto[0]
+        }
+        cliente.favoritos.push(favorito);
         await cliente.save();
         res.json({ msg: "Producto agregado a favoritos" });  /* Mensaje faltante */
     } catch (error) {
@@ -568,9 +574,8 @@ const verFavoritos = async (req, res) => {
         const documentos = [];
         // Buscar los productos favoritos en la base de datos
         for (let index = 0; index < favoritosIds.length; index++) {
-            let nombreProducto = favoritosIds[index];
-            const producto = await Producto.findOne({ nombreProducto });
-            documentos.push(producto);
+            let productoFav = favoritosIds[index]
+            documentos.push(productoFav);
         }
         
         res.json({ favoritos: documentos });
@@ -651,7 +656,8 @@ const agregarProductoCarrito = async (req, res) => {
             producto_C: productoPedido.nombreProducto,
             cantidad_C: 1,
             totalParcial_C: productoPedido.precioDescuento,
-            copiaInv_C: productoPedido.cantidadInv
+            copiaInv_C: productoPedido.cantidadInv,
+            img_C: productoPedido.imagenProducto[0]
         }
         cliente.carritoCompras.push(carrito);
         await cliente.save();

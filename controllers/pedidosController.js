@@ -43,6 +43,7 @@ const generarPedido = async (req, res) => {
                 producto_P: compras[index].producto_C,
                 cantidad_P: compras[index].cantidad_C,
                 totalParcial_P: compras[index].totalParcial_C,
+                img_P: compras[index].img_C
             }
             pedido.detallesPedido.push(detalles);
         }
@@ -58,6 +59,7 @@ const generarPedido = async (req, res) => {
         }
         let total = pedido.costoArticulos + pedido.costoEnvio;
         pedido.costoTotal = total;
+        pedido.clientePedido = cliente._id;
         await pedido.save();
         // Almacenamos el nombre del pedido en los pedidos del cliente
         cliente.pedidosCliente.push(pedido.nombrePedido);
@@ -99,6 +101,8 @@ const cancelarPedido = async (req, res) => {
         }
         cliente.pedidosCliente = newPedidos;
         await cliente.save();
+        // Añadimos fecha de cancelación
+        pedido.fechaCancelacion = new Date();
         // Cancelamos el pedido
         pedido.isCancelled = true;
         await pedido.save();
@@ -157,7 +161,7 @@ const pagarPedido = async (req, res) => {
     }
 
     // Validamos método de entrega
-    if(metodoEntrega != "En dirección indicada" && metodoEntrega != "Recoger en Tienda"){
+    if(metodoEntrega != "En dirección indicada"){
         const error = new Error("Método de entrega inválido"); /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
@@ -176,7 +180,9 @@ const pagarPedido = async (req, res) => {
         // Llenamos la información
         pedido.metodoPago = metodoPago;
         pedido.metodoEntrega = metodoEntrega;
-        pedido.fechaEntrega = fechaEntrega;
+        if(fechaEntrega != undefined){
+            pedido.fechaEntrega = fechaEntrega;
+        }
         // Verificamos el método de pago
         if (metodoPago == "Tarjeta de débito o crédito") {
             let tarjeta = {
@@ -192,10 +198,8 @@ const pagarPedido = async (req, res) => {
             pedido.tarjetaPedido = tarjeta;
         }
         // Verificamos método de entrega
-        if (metodoEntrega == "Recoger en Tienda") {
-            pedido.destinoPedido = undefined;
-        } else {
-            const destino = {
+        if (metodoEntrega == "En dirección indicada") {
+           const destino = {
                 codigoPostal_P: codigoPostal_P,
                 colonia_P: colonia_P,
                 calle_P: calle_P,
@@ -206,7 +210,7 @@ const pagarPedido = async (req, res) => {
         }
         // Marcamos el pedido como pagado
         pedido.isPaid = true;
-        pedido.isDeployed = true;
+        pedido.deliverStatus = "En preparación";
         await pedido.save();
         // Actualizar inventario (pendiente)
         let pedidos = pedido.detallesPedido;
@@ -245,14 +249,14 @@ const solicitarReembolso = async (req, res) => {
     }
 
     // Validamos que no se haya solicitado ya el reembolso
-    if(pedido.returnReq == true){
+    if(pedido.returnStatus == "Pendiente"){
         const error = new Error("Ocurrió un error");
         return res.status(400).json({msg: error.message});
     }
 
     // Solicitamos el reembolso
     try {
-        pedido.returnReq = true;
+        pedido.returnStatus = "Pendiente";
         pedido.returnMotif = returnMotif;
         await pedido.save();
         res.json({ msg: "Se ha solicitado el reembolso" });

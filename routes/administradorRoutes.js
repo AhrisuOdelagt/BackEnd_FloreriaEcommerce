@@ -13,7 +13,8 @@ import { registroAdministrador,
 	mostrarPedidosAReembolsar,
 	autorizarReembolso,
 	visualizarRegistroCancelaciones,
-	visualizarRegistroRembolsos} from "../controllers/administradorController.js";
+	visualizarRegistroRembolsos,
+    modificarEstadoPedido} from "../controllers/administradorController.js";
 import checkAuthAdmin from "../middleware/checkAuthAdmin.js"
 const router = express.Router();
 
@@ -36,5 +37,6 @@ router.get("/pedidos/mostrarPedidosAReembolsar", checkAuthAdmin, mostrarPedidosA
 router.get("/pedidos/mostrarPedidosCancelados", checkAuthAdmin, visualizarRegistroCancelaciones);  // Revisado
 router.get("/pedidos/mostrarReembolsos", checkAuthAdmin, visualizarRegistroRembolsos);  // Revisado
 router.post("/pedidos/autorizarReembolso", checkAuthAdmin, autorizarReembolso);  // Revisado
+router.post("/pedidos/modificarEstado", checkAuthAdmin, modificarEstadoPedido);
 
 export default router;

@@ -250,7 +250,7 @@ const mostrarPedidosAReembolsar = async (req, res) => {
         return res.status(403).json({msg: error.message});
     }
     //Buscamos unicamente los pedidos en solicitud de reembolso
-    const aRembolsar = {returnReq: "true"};
+    const aRembolsar = {returnStatus: "Pendiente"};
 
     //Obtenemos los pedidos
     try {
@@ -278,27 +278,38 @@ const autorizarReembolso = async (req, res) => {
     }
 
     // Verificamos que exista el pedido
-    const { nombrePedido } = req.body;
+    const { nombrePedido,
+            status } = req.body;
     const pedido = await Pedido.findOne({ nombrePedido });
     if(!pedido){
         const error = new Error("El número de pedido es incorrecto");
         return res.status(404).json({msg: error.message});
     }
 
+    // Verificamos que el status coincida con los status disponibles
+    if(status != "Procesada" && status != "Rechazada"){
+        const error = new Error("Estado de solicitud incorrecto");  /* Mensaje sin mostrar */
+        return res.status(403).json({msg: error.message});
+    }
+
     // Validamos que se haya solicitado ya el reembolso
-    if(pedido.returnReq == true){
+    if(pedido.returnStatus == "Pendiente"){
         // Autorizamos el reembolso
         try {
-            pedido.isReturned = true;
-            pedido.returnReq = false;
+            pedido.returnStatus = status;
             await pedido.save();
-            res.json({ msg: "Se ha autorizado el reembolso." });    /* Mensaje faltante */
+            if(status == "Procesada"){
+                res.json({ msg: "Se ha autorizado la devolución" });    /* Mensaje faltante */
+            }
+            else if(status == "Rechazada"){
+                res.json({ msg: "Se ha rechazado la devolución" });    /* Mensaje faltante */
+            }
         } catch (error) {
             console.log(error);
         }
     }
     else{
-        const error = new Error("Este pedido no puede reembolsarse");   /* Mensaje faltante */
+        const error = new Error("Este pedido no pudo procesarse");   /* Mensaje faltante */
         return res.status(403).json({msg: error.message});
     }
 }
@@ -330,30 +341,73 @@ const visualizarRegistroCancelaciones = async (req, res) => {
     }
 }
 
-//Registro de rembolsos
-const visualizarRegistroRembolsos = async (req, res) => {
-    //Realizamos validacion del administrador
+const modificarEstadoPedido = async (req, res) => {
+    // Autenticación del administrador
     let emailAdministrador;
     emailAdministrador = req.administrador.emailAdministrador;
-    const administrador = await Administrador.findOne({ emailAdministrador })
-    if (!administrador) {
-      const error = new Error("Ocurrio un error");
-      return res.status(403).json({ msg: error.message });
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if(admin.isAdmin == false){
+        const error = new Error("Este usuario no es administrador"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
     }
 
+    // Verificamos que exista el pedido
+    const { nombrePedido,
+            status } = req.body;
+    const pedido = await Pedido.findOne({ nombrePedido });
+    if(!pedido){
+        const error = new Error("El número de pedido es incorrecto");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Verificamos que el status coincida con los status disponibles
+    if(status != "En preparación" && status != "En camino" && status != "Entregado"){
+        const error = new Error("Estado de solicitud incorrecto");  /* Mensaje sin mostrar */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Validamos que se haya pagado el pedido
+    if(pedido.deliverStatus != ""){
+        // Modificamos el status
+        try {
+            pedido.deliverStatus = status;
+            await pedido.save();
+            res.json({ msg: "Se ha actualizado el status del pedido" });    /* Mensaje faltante */
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    else{
+        const error = new Error("Este pedido no pudo procesarse");   /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+}
+
+//Registro de rembolsos
+const visualizarRegistroRembolsos = async (req, res) => {
+    // Autenticamos al administrador
+    let emailAdministrador;
+    emailAdministrador = req.administrador.emailAdministrador;
+    const admin = await Administrador.findOne({ emailAdministrador });
+    if (admin.isAdmin == false) {
+        const error = new Error("Este usuario no es administrador");
+        return res.status(403).json({ msg: error.message });
+    }
+  
+    // Buscamos los pedidos con returnStatus "Procesada" o "Rechazada"
+    const estado = { returnStatus: { $in: ["Procesada", "Rechazada"] } };
+
+    // Obtenemos los pedidos
     try {
-      // Buscamos los pedidos con reembolso
-      const documentos = await Pedido.find({ isReturned: true });
+        const documentos = await Pedido.find(estado);
+        if (documentos.length < 1) {
+            const error = new Error("No existen pedidos con solicitudes de reembolso");
+            return res.status(404).json({ msg: error.message });
+        }
 
-      if (documentos.length < 1) {
-        const error = new Error("No existen pedidos con reembolso");
-        return res.status(404).json({ msg: error.message });
-      }
-
-      // Mostramos los pedidos con reembolso
-      return res.status(200).json({ reembolsados: documentos });
+        res.json({ pedidosRem: documentos });
     } catch (error) {
-      return res.status(500).json({ msg: "Error al obtener los pedidos con reembolso" });
+        console.log(error);
     }
 }
 
@@ -371,4 +425,5 @@ export { registroAdministrador,
 	mostrarPedidosAReembolsar,
 	autorizarReembolso,
 	visualizarRegistroCancelaciones,
-	visualizarRegistroRembolsos};
+	visualizarRegistroRembolsos,
+    modificarEstadoPedido};

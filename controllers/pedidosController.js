@@ -64,7 +64,7 @@ const generarPedido = async (req, res) => {
         // Almacenamos el nombre del pedido en los pedidos del cliente
         cliente.pedidosCliente.push(pedido.nombrePedido);
         await cliente.save();
-        res.json({ msg: "Se ha generado el pedido" });  /* Mensaje faltante */
+        res.json({ pedido });  /* Mensaje faltante */
     } catch (error) {
         console.log(error);
     }

@@ -1,6 +1,7 @@
 import Producto from "../modelos/productos.js";
 import Administrador from "../modelos/administrador.js"
 import Cliente from "../modelos/cliente.js";
+import Pedido from "../modelos/pedidos.js";
 // import Temporada from "../modelos/temporadas.js";
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -293,6 +294,17 @@ const modificarProducto = async (req, res) => {
                 }
             }
             await clienteAModificar.save();
+        }
+        // Revisamos que no haya problemas con las fotos de los detalles de ningún pedido
+        const imagen = productoAModificar.imagenProducto[0];
+        const pedidos = await Pedido.find({ 'detallesPedido.img_P': imagen });
+        for (let i = 0; i < pedidos.length; i++) {
+            console.log(pedidos[i]);
+            const nombrePedido = pedidos[i].nombrePedido;
+            const pedido = await Pedido.findOne({ nombrePedido });
+            console.log(pedido);
+            pedido.detallesPedido.img_P = productoAModificar.imagenProducto[0];
+            await pedido.save();
         }
 
         // Guardamos los cambios

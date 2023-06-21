@@ -1,5 +1,6 @@
 import Administrador from "../modelos/administrador.js";
 import Pedido from "../modelos/pedidos.js";
+import Cliente from "../modelos/cliente.js";
 import generarID from "../helpers/generarID.js";
 import generarJWT from "../helpers/generarJWT.js";
 import { emailRegistro, emailRestablecer } from "../helpers/emails.js";
@@ -291,6 +292,12 @@ const autorizarReembolso = async (req, res) => {
         const error = new Error("Estado de solicitud incorrecto");  /* Mensaje sin mostrar */
         return res.status(403).json({msg: error.message});
     }
+    
+    // Verificamos que el pedido pueda editarse
+    if(pedido.isFinished == true){
+        const error = new Error("Este pedido ya no puede editarse");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
 
     // Validamos que se haya solicitado ya el reembolso
     if(pedido.returnStatus == "Pendiente"){
@@ -299,9 +306,11 @@ const autorizarReembolso = async (req, res) => {
             pedido.returnStatus = status;
             await pedido.save();
             if(status == "Procesada"){
+                pedido.isFinished = true;
                 res.json({ msg: "Se ha autorizado la devolución" });    /* Mensaje faltante */
             }
             else if(status == "Rechazada"){
+                pedido.isFinished = true;
                 res.json({ msg: "Se ha rechazado la devolución" });    /* Mensaje faltante */
             }
         } catch (error) {
@@ -371,6 +380,33 @@ const modificarEstadoPedido = async (req, res) => {
         // Modificamos el status
         try {
             pedido.deliverStatus = status;
+
+            // Verificamos si el pedido se ha enviado
+            if(status == "En camino"){
+                const date = new Date();
+                pedido.fechaEnvio = date;
+            }
+
+            // Movemos ese pedido de la lista de pedidos a la lista de entregados
+            if(status == "Entregado"){
+                const date = new Date();
+                pedido.fechaEntrega = date;
+                const id = pedido.clientePedido;
+                const cliente = await Cliente.findById(id);
+                console.log(cliente);
+                const pedCliente = cliente.pedidosCliente;
+                const entrCliente = cliente.entregadosCliente;
+                const newPedidos = [];
+                for (let index = 0; index < pedCliente.length; index++) {
+                    if(pedCliente[index] != pedido.nombrePedido){
+                        newPedidos.push(pedCliente[index]);
+                    }
+                }
+                cliente.pedidosCliente = newPedidos;
+                entrCliente.push(pedido.nombrePedido);
+                await cliente.save();
+            }
+
             await pedido.save();
             res.json({ msg: "Se ha actualizado el status del pedido" });    /* Mensaje faltante */
         } catch (error) {

@@ -158,6 +158,10 @@ const clienteSchema = mongoose.Schema({
         type: [String],
         trim: true,
     },
+    entregadosCliente: {
+        type: [String],
+        trim: true,
+    },
     carritoCompras: {
         type: [carritoComprasSchema],
     },

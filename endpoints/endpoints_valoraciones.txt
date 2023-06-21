@@ -18,3 +18,12 @@ json:	{
     "nombreProducto": "Pingüino2",
     "comentario": "No está chido"
 }
+
+
+
+-- Ver producto a valorar
+Tipo: POST
+URL:	http://localhost:4000/api/cliente/interaccionPro/verAValorar
+json:	{
+    "nombreProducto": "Pingüino3"
+}

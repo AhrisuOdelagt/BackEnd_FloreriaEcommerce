@@ -83,12 +83,29 @@ const pedidosSchema = mongoose.Schema({
         trim: true,
         default: () => new Date(),
     },
+    fechaCompra: {
+        type: Date,
+        trim: true,
+    },
+    fechaEnvio: {
+        type: Date,
+        trim: true,
+    },
     fechaEntrega: {
         type: Date,
         trim: true,
         default: () => {
             const currentDate = new Date();
             currentDate.setDate(currentDate.getDate() + 4);
+            return currentDate;
+          },
+    },
+    fechaLimiteDev: {
+        type: Date,
+        trim: true,
+        default: () => {
+            const currentDate = new Date();
+            currentDate.setDate(currentDate.getDate() + 15);
             return currentDate;
           },
     },

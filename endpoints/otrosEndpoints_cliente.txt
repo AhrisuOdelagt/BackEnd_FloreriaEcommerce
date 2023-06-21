@@ -23,6 +23,21 @@ URL:	http://localhost:4000/api/cliente/interaccionPed/visualizar
 
 
 
+-- Visualizar pedidos entregados
+Tipo: GET
+URL:	http://localhost:4000/api/cliente/interaccionPed/visualizarEntregados
+
+
+
+-- Visualizar seguimiento de pedido
+Tipo: POST
+URL:   http://localhost:4000/api/cliente/interaccionPed/visualizarSeguimiento 
+JSON: {
+    "nombrePedido": "Oder Franco Olvera_1687316573369"
+}
+
+
+
 --- Personalizar Producto ---
 (Requieren autenticación (JWT) del cliente)
 
@@ -53,6 +68,15 @@ JSON: {
 -- Ver Favoritos
 Tipo: GET
 URL:    http://localhost:4000/api/cliente/interaccionPro/verFavoritos
+
+
+
+-- Eliminar Favoritos
+Tipo: POST
+URL:    http://localhost:4000/api/cliente/interaccionPro/eliminarFavoritos
+JSON: {
+    "nombreProducto": "Rosa muy muy roja"
+}
 
 
 

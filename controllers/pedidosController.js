@@ -16,7 +16,7 @@ const generarPedido = async (req, res) => {
 
     // Validamos que el carrito no esté vacío
     if(cliente.carritoCompras.length < 1){
-        const error = new Error("Su carrito de compras está vacío"); /* Mensaje faltante */
+        const error = new Error("No hay productos en el carrito."); /* Mensaje faltante */
         return res.status(404).json({msg: error.message});
     }
 
@@ -105,6 +105,7 @@ const cancelarPedido = async (req, res) => {
         pedido.fechaCancelacion = new Date();
         // Cancelamos el pedido
         pedido.isCancelled = true;
+        pedido.isFinished = true;
         await pedido.save();
         res.json({ msg: "Se ha cancelado el pedido" }); /* Mensaje faltante */
     } catch (error) {
@@ -183,6 +184,9 @@ const pagarPedido = async (req, res) => {
         if(fechaEntrega != undefined){
             pedido.fechaEntrega = fechaEntrega;
         }
+        let date = new Date();
+        await pedido.save();
+        pedido.fechaCompra = date;
         // Verificamos el método de pago
         if (metodoPago == "Tarjeta de débito o crédito") {
             let tarjeta = {
@@ -248,9 +252,26 @@ const solicitarReembolso = async (req, res) => {
         return res.status(404).json({msg: error.message});
     }
 
+    // Verificamos que ya esté entregado el pedido
+    // Validamos que no se haya solicitado ya el reembolso
+    if(pedido.deliverStatus != "Entregado"){
+        const error = new Error("El pedido aún no se ha entregado");
+        return res.status(400).json({msg: error.message});
+    }
+
     // Validamos que no se haya solicitado ya el reembolso
     if(pedido.returnStatus == "Pendiente"){
         const error = new Error("Ocurrió un error");
+        return res.status(400).json({msg: error.message});
+    }
+
+    // Validamos que no se haya excedido la fecha límite de devoluciones
+    const date = new Date();
+    const currentTime = date.valueOf();
+    const end = pedido.fechaLimiteDev;
+    const endPeriod = end.valueOf();
+    if(currentTime > endPeriod){
+        const error = new Error("Se ha terminado el periodo de devoluciones");  /* Mensaje faltante */
         return res.status(400).json({msg: error.message});
     }
 

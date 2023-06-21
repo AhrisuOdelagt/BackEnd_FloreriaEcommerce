@@ -540,6 +540,15 @@ const agregarFavoritos = async (req, res) => {
         return res.status(403).json({msg: error.message});
     }
 
+    // Verificamos que el producto no se haya añadido previamente
+    let productosFavoritos = cliente.favoritos;
+    for (let index = 0; index < productosFavoritos.length; index++) {
+        if(productosFavoritos[index].productoFav == nombreProducto){
+            const error = new Error("El producto ya está agregado");   /* Mensaje faltante */
+            return res.status(400).json({ msg: error.message });
+        }
+    }
+
     // Añadimos a favoritos
     try {
         const favorito = {
@@ -551,6 +560,56 @@ const agregarFavoritos = async (req, res) => {
         cliente.favoritos.push(favorito);
         await cliente.save();
         res.json({ msg: "Producto agregado a favoritos" });  /* Mensaje faltante */
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Eliminar de favoritos
+const eliminarFavoritos = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el producto esté en favoritos
+    let productosFavoritos = cliente.favoritos;
+    let existe = false;
+    for (let index = 0; index < productosFavoritos.length; index++) {
+        if(productosFavoritos[index].productoFav == nombreProducto){
+            existe = true;
+            break;
+        }
+    }
+    if(existe == false){
+        const error = new Error("El producto no está en favoritos");   /* Mensaje faltante */
+        return res.status(400).json({ msg: error.message });
+    }
+
+    // Eliminamos el producto de favoritos
+    try {
+        let newFavoritos = [];
+        for (let index = 0; index < productosFavoritos.length; index++) {
+            if(productosFavoritos[index].productoFav != nombreProducto){
+                newFavoritos.push(productosFavoritos[index]);
+            }
+        }
+        cliente.favoritos =  newFavoritos;
+        await cliente.save();
+        res.json({ msg: "Producto removido de favoritos" });
     } catch (error) {
         console.log(error);
     }
@@ -584,6 +643,43 @@ const verFavoritos = async (req, res) => {
     }
 }
 
+// Ver producto a valorar
+const verProductoAValorar = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    const { nombreProducto } = req.body;
+
+    // Verificamos que el producto exista
+    const producto = await Producto.findOne({ nombreProducto });
+    if(!producto){
+        const error = new Error("Producto no registrado");  /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Regresamos la información
+    try {
+        const info = {
+            nombreProducto: producto.nombreProducto,
+            precioProducto: producto.precioDescuento,
+            categoriaProducto: producto.categoriaProducto,
+            descrProducto: producto.descrProducto,
+            statusProducto: producto.statusProducto,
+            imagenProducto: producto.imagenProducto
+        }
+        res.json({ info });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Visualizar la valoración de productos
 const visualizarValoracionComentarios = async (req, res) => {
     //Realizamos validacion del cliente
     let emailCliente;
@@ -948,6 +1044,71 @@ const verHistorialPedidos = async (req, res) => {
     }
 }
 
+const verHistorialEntregados = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Revisamos la longitud del arreglo de pedidos entregados
+    if(cliente.entregadosCliente < 1){
+        const error = new Error("Sin pedidos entregados");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Revisamos el historial de pedidos entregados
+    try {
+        const entregados = cliente.entregadosCliente;
+        let documentos = [];
+        for (let index = 0; index < entregados.length; index++) {
+            let nombrePedido = entregados[index];
+            let pedidoEntregado = await Pedido.findOne({ nombrePedido });
+            documentos.push(pedidoEntregado);
+        }
+        res.json({ pedidosEntregados: documentos });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Ver seguimiento del pedido
+const verSeguimientoPedido = async (req, res) => {
+    // Realizamos validación del cliente
+    let emailCliente;
+    emailCliente = req.cliente.emailCliente;
+    const cliente = await Cliente.findOne({ emailCliente });
+    if(!cliente){
+        const error = new Error("Este usuario no ha iniciado sesión"); /* Mensaje faltante */
+        return res.status(403).json({msg: error.message});
+    }
+
+    // Verificamos que el pedido exista
+    const { nombrePedido } = req.body;
+    const pedido = await Pedido.findOne({ nombrePedido });
+    if(!pedido){
+        const error = new Error("El número de pedido es incorrecto");
+        return res.status(404).json({msg: error.message});
+    }
+
+    // Mostramos el seguimiento del pedido
+    try {
+        const seg = {
+            nombrePedido: pedido.nombrePedido,
+            fechaPedido: pedido.fechaPedido,
+            fechaCompra: pedido.fechaCompra,
+            fechaEnvio: pedido.fechaEnvio,
+            fechaEntrega: pedido.fechaEntrega
+        }
+        res.json({ seg });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 // Ver tarjetas registradas
 const verTarjetas = async (req, res) => {
     // Realizamos validación del cliente
@@ -1025,4 +1186,8 @@ export { registroCliente,
     visualizarCarrito,
     verHistorialPedidos,
     verTarjetas,
-    verDirecciones };
+    verDirecciones,
+    eliminarFavoritos,
+    verProductoAValorar,
+    verHistorialEntregados,
+    verSeguimientoPedido };

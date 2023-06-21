@@ -309,7 +309,7 @@ const modificarProducto = async (req, res) => {
 
         // Guardamos los cambios
         await productoAModificar.save();
-        res.json({msg: "Cambio guardado exitosamente"});
+        res.json({msg: "El cambio ha sido guardado con éxito"});
     }
 
     catch(error){

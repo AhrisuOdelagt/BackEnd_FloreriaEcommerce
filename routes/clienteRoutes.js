@@ -26,7 +26,11 @@ import { registroCliente,
     visualizarCarrito,
     verHistorialPedidos,
     verTarjetas,
-    verDirecciones } from "../controllers/clienteController.js";
+    verDirecciones,
+    eliminarFavoritos,
+    verProductoAValorar,
+    verHistorialEntregados,
+    verSeguimientoPedido } from "../controllers/clienteController.js";
 import checkAuth from "../middleware/checkAuth.js";
 const router = express.Router();
 
@@ -48,9 +52,11 @@ router.post("/modificar/tarjeta", checkAuth, modificarTarjeta);
 // Interacción con productos
 router.post("/interaccionPro/valorar", checkAuth, valorarProducto);
 router.post("/interaccionPro/comentar", checkAuth, agregarComentario);
+router.post("/interaccionPro/verAValorar", checkAuth, verProductoAValorar);
 router.get("/interaccionPro/verFlores", checkAuth, verFlores);
 router.get("/interaccionPro/verPeluches", checkAuth, verPeluches);
 router.post("/interaccionPro/agregarFavoritos", checkAuth, agregarFavoritos);   // Revisado
+router.post("/interaccionPro/eliminarFavoritos", checkAuth, eliminarFavoritos);
 router.get("/interaccionPro/verFavoritos", checkAuth, verFavoritos);    // Revisado
 router.post("/interaccionPro/visualizarVC", checkAuth, visualizarValoracionComentarios);    // Revisado
 // Interacción con carrito
@@ -62,6 +68,8 @@ router.get("/carrito/vaciarCarrito", checkAuth, vaciarCarrito);
 router.get("/carrito/visualizarCarrito", checkAuth, visualizarCarrito);
 // Interacción con pedidos
 router.get("/interaccionPed/visualizar", checkAuth, verHistorialPedidos);
+router.get("/interaccionPed/visualizarEntregados", checkAuth, verHistorialEntregados);
+router.post("/interaccionPed/visualizarSeguimiento", checkAuth, verSeguimientoPedido);
 router.get("/interaccionPed/verTarjetas", checkAuth, verTarjetas);
 router.get("/interaccionPed/verDirecciones", checkAuth, verDirecciones);
 
